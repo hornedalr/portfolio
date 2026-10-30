@@ -1,25 +1,44 @@
 // Lamp-pull cord: a Verlet rope hanging from a spring-loaded reel. Pure math, no DOM, so it can be unit-tested in Node.
 //
 // Pulling past the rest length draws extra cord out of the reel (`ext`); the rope itself stays inextensible.
-// On release the reel winds back at a capped speed, which flicks the handle up and lets it bounce and swing.
+// On release the reel springs back and hits a hard stop, which flicks the handle up and lets it bounce and swing.
 
-export interface RopeOptions {
+/** Physics values that can be changed on a live rope without rebuilding it. */
+export interface RopePhysics {
+  /** Maximum extra cord that can be pulled out of the reel. */
+  maxStretch: number;
+  gravity: number;
+  /** Velocity kept per step (1 = no air drag). */
+  damping: number;
+  /** Constraint solver passes per step; higher = stiffer cord. */
+  iterations: number;
+  /** Speed cap per point, in px per step. */
+  maxSpeed: number;
+  /** Handle weight relative to one cord segment. */
+  handleWeight: number;
+  /** Reel spring frequency per step; higher = faster snap back and a bigger fling. */
+  reelStiffness: number;
+  /** How quickly a sideways over-stretch eases back (0-1 per step). */
+  segRecover: number;
+}
+
+export interface RopeOptions extends Partial<RopePhysics> {
   anchorX: number;
   anchorY: number;
   restLength: number;
-  /** Maximum extra cord that can be pulled out of the reel. */
-  maxStretch: number;
   points?: number;
-  gravity?: number;
-  damping?: number;
 }
 
-const ITERATIONS = 16;
-const MAX_SPEED = 24;
-const HANDLE_INV_MASS = 0.4;
-const SEG_RECOVER = 0.25;
-/** Reel spring frequency per step. The reel is undamped and hits a hard stop when fully wound, flinging the handle. */
-const REEL_OMEGA = 0.08;
+export const DEFAULT_PHYSICS: RopePhysics = {
+  maxStretch: 110,
+  gravity: 0.6,
+  damping: 0.985,
+  iterations: 16,
+  maxSpeed: 24,
+  handleWeight: 2.5,
+  reelStiffness: 0.08,
+  segRecover: 0.25,
+};
 
 export class Rope {
   readonly n: number;
@@ -30,8 +49,7 @@ export class Rope {
   private readonly inv: Float32Array;
   private readonly o: RopeOptions;
   private readonly baseSeg: number;
-  private readonly gravity: number;
-  private readonly damping: number;
+  private p: RopePhysics;
   private segLen: number;
   private ext = 0;
   private extV = 0;
@@ -42,8 +60,7 @@ export class Rope {
   constructor(options: RopeOptions) {
     this.o = options;
     this.n = options.points ?? 14;
-    this.gravity = options.gravity ?? 0.6;
-    this.damping = options.damping ?? 0.985;
+    this.p = { ...DEFAULT_PHYSICS };
     this.baseSeg = options.restLength / (this.n - 1);
     this.segLen = this.baseSeg;
     this.xs = new Float32Array(this.n);
@@ -52,8 +69,17 @@ export class Rope {
     this.pys = new Float32Array(this.n);
     this.inv = new Float32Array(this.n).fill(1);
     this.inv[0] = 0;
-    this.inv[this.n - 1] = HANDLE_INV_MASS;
+    this.configure(options);
     this.reset();
+  }
+
+  /** Updates physics in place, keeping the current motion. */
+  configure(physics: Partial<RopePhysics>): void {
+    for (const key of Object.keys(DEFAULT_PHYSICS) as (keyof RopePhysics)[]) {
+      const v = physics[key];
+      if (typeof v === "number" && Number.isFinite(v)) this.p[key] = v;
+    }
+    this.inv[this.n - 1] = 1 / Math.max(this.p.handleWeight, 0.01);
   }
 
   get handleX(): number {
@@ -102,7 +128,8 @@ export class Rope {
 
   /** Pointer target for the handle; pulling past rest length gets progressively harder, like a spring. */
   setDragTarget(x: number, y: number): void {
-    const { anchorX, anchorY, restLength, maxStretch } = this.o;
+    const { anchorX, anchorY, restLength } = this.o;
+    const { maxStretch } = this.p;
     let dx = x - anchorX;
     let dy = Math.max(y - anchorY, 8);
     const d = Math.hypot(dx, dy);
@@ -144,7 +171,7 @@ export class Rope {
     if (this.dragging) {
       this.ext = Math.max(0, Math.hypot(this.targetX - anchorX, this.targetY - anchorY) - this.o.restLength);
     } else if (this.ext > 0 || this.extV !== 0) {
-      this.extV -= REEL_OMEGA * REEL_OMEGA * this.ext;
+      this.extV -= this.p.reelStiffness * this.p.reelStiffness * this.ext;
       this.ext += this.extV;
       if (this.ext <= 0) {
         this.ext = 0;
@@ -166,17 +193,18 @@ export class Rope {
         ys[h] = this.targetY;
         continue;
       }
-      let vx = (xs[i] - pxs[i]) * this.damping;
-      let vy = (ys[i] - pys[i]) * this.damping;
+      let vx = (xs[i] - pxs[i]) * this.p.damping;
+      let vy = (ys[i] - pys[i]) * this.p.damping;
       const speed = Math.hypot(vx, vy);
-      if (speed > MAX_SPEED) {
-        vx *= MAX_SPEED / speed;
-        vy *= MAX_SPEED / speed;
+      const maxSpeed = this.p.maxSpeed;
+      if (speed > maxSpeed) {
+        vx *= maxSpeed / speed;
+        vy *= maxSpeed / speed;
       }
       pxs[i] = xs[i];
       pys[i] = ys[i];
       xs[i] += vx;
-      ys[i] += vy + this.gravity;
+      ys[i] += vy + this.p.gravity;
     }
 
     // Sideways pulls can exceed the rope length; let segments lengthen while held and ease back after.
@@ -184,12 +212,12 @@ export class Rope {
       const d = Math.hypot(xs[h] - xs[0], ys[h] - ys[0]);
       this.segLen = Math.max(this.baseSeg, d / h);
     } else if (this.segLen !== this.baseSeg) {
-      this.segLen += (this.baseSeg - this.segLen) * SEG_RECOVER;
+      this.segLen += (this.baseSeg - this.segLen) * this.p.segRecover;
       if (this.segLen - this.baseSeg < 0.01) this.segLen = this.baseSeg;
     }
 
     const handleInv = this.dragging ? 0 : inv[h];
-    for (let k = 0; k < ITERATIONS; k++) {
+    for (let k = 0; k < this.p.iterations; k++) {
       for (let i = 0; i < h; i++) {
         const j = i + 1;
         const dx = xs[j] - xs[i];
