@@ -1,5 +1,6 @@
 // Dev-only design editor UI, injected into every page by integrations/design-editor.mjs during `npm run dev`.
-// Click anything to edit the palette colours it uses (live preview, Save writes global.css) or replace its picture.
+// Click anything to edit its words (Save writes them back where they're written in src), the palette colours it uses
+// (live preview, Save writes global.css) or replace its picture.
 // Lives in a shadow root so the page's styles (and palette edits) never affect the editor itself.
 
 const STORE = "design-editor";
@@ -46,6 +47,12 @@ shadow.innerHTML = `
   label { display: flex; flex-direction: column; gap: 3px; }
   input[type=text], input[type=range], .side > * { box-sizing: border-box; width: 100%; min-width: 0; }
   input[type=text] { border: 1px solid #bbb; padding: 4px 6px; text-transform: uppercase; }
+  textarea { display: block; width: 100%; border: 1px solid #bbb; padding: 6px; resize: vertical; }
+  .tweak { display: flex; align-items: center; gap: 6px; margin: 4px 0; }
+  .tweak .grow { flex: 1; }
+  .tweak button { width: 30px; padding: 4px 0; }
+  .tweak code { min-width: 40px; text-align: center; }
+  select { border: 1px solid #bbb; padding: 4px; background: #fff; }
   .link { border: 0; padding: 0; color: #0a84ff; background: none; }
   .link:hover { text-decoration: underline; background: none; }
   .primary { background: #0a84ff; border-color: #0a84ff; color: #fff; font-weight: 600; }
@@ -59,7 +66,7 @@ shadow.innerHTML = `
 <div class="box selected"></div>
 <aside class="panel" aria-label="Design editor">
   <div class="head"><strong>Design editor</strong><span class="status muted"></span></div>
-  <div class="body"><p class="muted">Click anything on the page to edit its colours or picture. Press Esc to stop editing.</p></div>
+  <div class="body"><p class="muted">Click anything on the page to edit its text, colours or picture. Press Esc to stop editing.</p></div>
   <div class="wheel">
     <div class="top"><code class="token" style="font-weight:700"></code><button class="link revert">Revert</button></div>
     <div class="cols">
@@ -169,7 +176,15 @@ const refreshDirty = () => {
   saveBtn.disabled = discardBtn.disabled = !n;
 };
 let editing = false;
-const persist = () => sessionStorage.setItem(STORE, JSON.stringify({ on: editing, changes: [...changes] }));
+// Remembers the selected element by its source position, so it stays selected after a save reloads the page.
+const locate = (el) => {
+  const file = el?.getAttribute?.("data-astro-source-file"), loc = el?.getAttribute?.("data-astro-source-loc");
+  if (!file || !loc) return null;
+  const same = document.querySelectorAll(`[data-astro-source-file="${CSS.escape(file)}"][data-astro-source-loc="${loc}"]`);
+  return { file, loc, index: [...same].indexOf(el) };
+};
+const persist = () =>
+  sessionStorage.setItem(STORE, JSON.stringify({ on: editing, changes: [...changes], selected: editing ? locate(selected) : null }));
 
 // ---- colour wheel ----
 let wheelToken = "";
@@ -286,9 +301,156 @@ const row = (token, uses) => `
     <code class="muted" data-hexfor="${token}">${current(token).toUpperCase()}</code>
   </button>`;
 
+// ---- size & spacing (written back as Tailwind classes on the element's tag) ----
+const SIZES = ["xs", "sm", "base", "lg", "xl", "2xl", "3xl", "4xl", "5xl", "6xl", "7xl", "8xl", "9xl"];
+const SIZE_REM = [0.75, 0.875, 1, 1.125, 1.25, 1.5, 1.875, 2.25, 3, 3.75, 4.5, 6, 8];
+const SPACES = ["0", "0.5", "1", "1.5", "2", "2.5", "3", "3.5", "4", "5", "6", "7", "8", "9", "10", "11", "12", "14", "16", "20", "24", "28", "32", "36", "40", "44", "48"];
+const WEIGHTS = { light: 300, normal: 400, medium: 500, semibold: 600, bold: 700 };
+const SIZE_CLASS = new RegExp(`^((?:[\\w-]+:)*)text-(${SIZES.join("|")})$`);
+const spaceClass = (side) => new RegExp(`^((?:[\\w-]+:)*)m${side}-(${SPACES.map((s) => s.replace(".", "\\.")).join("|")})$`);
+const WEIGHT_CLASS = new RegExp(`^((?:[\\w-]+:)*)font-(${Object.keys(WEIGHTS).join("|")})$`);
+const WIDTH_CLASS = /^w-(full|\[\d+%\])$/;
+const remPx = () => parseFloat(getComputedStyle(root).fontSize) || 16;
+const nearest = (values, v) => values.reduce((best, x, i) => (Math.abs(x - v) < Math.abs(values[best] - v) ? i : best), 0);
+const clampIndex = (i, list) => Math.max(0, Math.min(list.length - 1, i));
+
+let layout = null;
+// Elements written by the same line of source (e.g. every project title) change together.
+const twinsOf = (el, image) => {
+  const anchor = image ? el.parentElement : el;
+  const at = locate(anchor);
+  if (!at) return [el];
+  const same = document.querySelectorAll(`[data-astro-source-file="${CSS.escape(at.file)}"][data-astro-source-loc="${at.loc}"]`);
+  return image ? [...same].map((p) => p.querySelector(":scope > img")).filter(Boolean) : [...same];
+};
+const layoutSection = (el) => {
+  const image = el instanceof HTMLImageElement;
+  const anchor = image ? el.parentElement : el;
+  const at = locate(anchor);
+  if (!at || !/\/src\/(components|pages|layouts)\//.test(at.file)) return "";
+  const style = getComputedStyle(el);
+  const hasText = !image && textNodesOf(el).length > 0;
+  layout = {
+    el, image, at, tag: anchor.tagName.toLowerCase(), twins: twinsOf(el, image),
+    size: nearest(SIZE_REM, parseFloat(style.fontSize) / remPx()), sizeSteps: 0,
+    above: nearest(SPACES.map(Number), parseFloat(style.marginTop) / remPx() / 0.25), aboveSteps: 0,
+    below: nearest(SPACES.map(Number), parseFloat(style.marginBottom) / remPx() / 0.25), belowSteps: 0,
+    weight: null, width: null,
+    startWidth: Math.round((el.getBoundingClientRect().width / (el.parentElement?.getBoundingClientRect().width || 1)) * 100),
+  };
+  const stepper = (key, label) => `
+    <div class="tweak"><span class="grow">${label}</span><button data-step="${key}" data-by="-1" aria-label="Less">−</button>
+    <code class="muted" data-show="${key}"></code><button data-step="${key}" data-by="1" aria-label="More">+</button></div>`;
+  let html = `<h3>Size &amp; spacing</h3>`;
+  if (image) {
+    html += `<label>Picture size <span class="muted" data-show="width"></span>
+      <input type="range" class="width" min="20" max="100" step="5" value="${Math.min(100, layout.startWidth)}" /></label>`;
+  }
+  if (hasText) {
+    html += stepper("size", "Text size");
+    const current = Object.entries(WEIGHTS).reduce((a, b) => (Math.abs(b[1] - Number(style.fontWeight)) < Math.abs(a[1] - Number(style.fontWeight)) ? b : a))[0];
+    html += `<div class="tweak"><span class="grow">Boldness</span><select class="weight">${Object.keys(WEIGHTS)
+      .map((w) => `<option${w === current ? " selected" : ""}>${w}</option>`)
+      .join("")}</select></div>`;
+  }
+  html += stepper("above", "Space above") + stepper("below", "Space below");
+  html += `<div style="display:flex;gap:8px;margin-top:6px">
+      <button class="primary" data-layout-save disabled>Save size &amp; spacing</button><button data-layout-undo disabled>Undo</button></div>
+    <p class="muted layout-msg" style="margin-top:4px">${layout.twins.length > 1 ? `Changes all ${layout.twins.length} like this on the page.` : ""}</p>`;
+  return html;
+};
+const layoutChanged = () =>
+  layout && (layout.sizeSteps || layout.aboveSteps || layout.belowSteps || layout.weight || (layout.width !== null && layout.width !== Math.min(100, layout.startWidth)));
+const previewLayout = (reset) => {
+  if (!layout || (!layout.previewed && (reset || !layoutChanged()))) return;
+  layout.previewed = !reset;
+  const { size, sizeSteps, above, aboveSteps, below, belowSteps, weight, width } = layout;
+  for (const t of layout.twins) {
+    t.style.fontSize = !reset && sizeSteps ? `${SIZE_REM[clampIndex(size + sizeSteps, SIZES)]}rem` : "";
+    t.style.marginTop = !reset && aboveSteps ? `${Number(SPACES[clampIndex(above + aboveSteps, SPACES)]) * 0.25}rem` : "";
+    t.style.marginBottom = !reset && belowSteps ? `${Number(SPACES[clampIndex(below + belowSteps, SPACES)]) * 0.25}rem` : "";
+    t.style.fontWeight = !reset && weight ? String(WEIGHTS[weight]) : "";
+    t.style.width = !reset && width !== null ? `${width}%` : "";
+    t.style.marginInline = !reset && width !== null && width < 100 ? "auto" : "";
+  }
+  if (selected) placeBox(selectedBox, selected);
+};
+const refreshLayout = () => {
+  if (!layout) return;
+  const show = (key, text) => body.querySelector(`[data-show="${key}"]`) && (body.querySelector(`[data-show="${key}"]`).textContent = text);
+  show("size", SIZES[clampIndex(layout.size + layout.sizeSteps, SIZES)]);
+  show("above", SPACES[clampIndex(layout.above + layout.aboveSteps, SPACES)]);
+  show("below", SPACES[clampIndex(layout.below + layout.belowSteps, SPACES)]);
+  show("width", `${layout.width ?? Math.min(100, layout.startWidth)}%`);
+  const unchanged = !layoutChanged();
+  body.querySelector("[data-layout-save]").disabled = unchanged;
+  body.querySelector("[data-layout-undo]").disabled = unchanged;
+  previewLayout(false);
+};
+/** Turns the previewed tweaks into class swaps: shift the classes already there, or add one if there are none. */
+const layoutClasses = () => {
+  const own = layout.el.getAttribute("class")?.split(/\s+/).filter(Boolean) ?? [];
+  const replace = [], add = [];
+  const shift = (steps, pattern, list, start, prefix) => {
+    if (!steps) return;
+    const hits = own.filter((c) => pattern.test(c));
+    if (!hits.length) return add.push(`${prefix}-${list[clampIndex(start + steps, list)]}`);
+    for (const c of hits) {
+      const [, variant, value] = pattern.exec(c);
+      replace.push([c, `${variant}${prefix}-${list[clampIndex(list.indexOf(value) + steps, list)]}`]);
+    }
+  };
+  shift(layout.sizeSteps, SIZE_CLASS, SIZES, layout.size, "text");
+  shift(layout.aboveSteps, spaceClass("t"), SPACES, layout.above, "mt");
+  shift(layout.belowSteps, spaceClass("b"), SPACES, layout.below, "mb");
+  if (layout.weight) {
+    const hits = own.filter((c) => WEIGHT_CLASS.test(c));
+    if (hits.length) hits.forEach((c, i) => replace.push([c, i ? null : `font-${layout.weight}`]));
+    else add.push(`font-${layout.weight}`);
+  }
+  if (layout.width !== null) {
+    const next = layout.width >= 100 ? "w-full" : `w-[${layout.width}%]`;
+    const hits = own.filter((c) => WIDTH_CLASS.test(c));
+    if (hits.length) hits.forEach((c) => replace.push([c, next]));
+    else add.push(next);
+    if (layout.width < 100 && !own.includes("mx-auto")) add.push("mx-auto");
+  }
+  return { replace, add };
+};
+const saveLayout = async () => {
+  const msg = body.querySelector(".layout-msg");
+  statusEl.textContent = "Saving…";
+  const res = await fetch("/__design/classes", {
+    method: "POST",
+    body: JSON.stringify({ file: layout.at.file, loc: layout.at.loc, tag: layout.tag, image: layout.image, ...layoutClasses() }),
+  });
+  const out = await res.json().catch(() => ({ ok: false, error: res.statusText }));
+  // On success the dev server reloads the page; the selection is restored from sessionStorage.
+  statusEl.textContent = out.ok ? `Saved to ${out.file}` : "Not saved";
+  if (!out.ok) msg.textContent = out.error;
+};
+
 let selected = null;
+// The text being edited: live-previewed in the page until it's saved (or undone).
+let textEdit = null;
+const textNodesOf = (el) => {
+  const walker = document.createTreeWalker(el, NodeFilter.SHOW_TEXT);
+  const out = [];
+  while (walker.nextNode()) if (walker.currentNode.nodeValue.trim()) out.push(walker.currentNode);
+  return out;
+};
+const previewText = (value) => {
+  if (!textEdit) return;
+  textEdit.nodes.forEach((n, i) => (n.nodeValue = value === null ? textEdit.before[i] : i ? "" : value));
+  if (selected) placeBox(selectedBox, selected);
+};
 const select = (el) => {
+  previewText(null);
+  textEdit = null;
+  previewLayout(true);
+  layout = null;
   selected = el;
+  persist();
   placeBox(selectedBox, el);
   const found = new Map();
   tokensOf(el, false, found);
@@ -298,6 +460,19 @@ const select = (el) => {
   for (let p = el.parentElement; p; p = p.parentElement) tokensOf(p, true, found);
 
   let html = `<p style="font-weight:600" class="break">${esc(describe(el))}</p>`;
+  const nodes = textNodesOf(el);
+  if (nodes.length && nodes.every((n) => n.parentElement === el)) {
+    const text = el.textContent.trim().replace(/\s+/g, " ");
+    textEdit = { el, nodes, before: nodes.map((n) => n.nodeValue), text };
+    html += `<h3>Text</h3>
+      <textarea class="text-edit" rows="${Math.min(8, Math.ceil(text.length / 38) + 1)}" spellcheck="true">${esc(text)}</textarea>
+      <div style="display:flex;gap:8px;margin-top:6px">
+        <button class="primary" data-text-save disabled>Save text</button><button data-text-undo disabled>Undo</button>
+      </div>
+      <p class="muted text-msg" style="margin-top:4px"></p>`;
+  } else if (nodes.length) {
+    html += `<h3>Text</h3><p class="muted">Click directly on a heading or paragraph to edit its words.</p>`;
+  }
   const img = el instanceof HTMLImageElement ? el : (el.closest("picture")?.querySelector("img") ?? el.querySelector("img"));
   const file = img && imageFileOf(img);
   if (img && file) {
@@ -309,6 +484,7 @@ const select = (el) => {
   } else if (img) {
     html += `<h3>Picture</h3><p class="muted">This picture isn't from src/assets, so it can't be replaced here.</p>`;
   }
+  html += layoutSection(el);
   if (el.closest("[data-pull-cord]")) {
     html += `<h3>Pull ball picture</h3>
       <p class="muted">Replace the sheep with your own PNG. The cord attaches at the top centre.</p>
@@ -324,6 +500,7 @@ const select = (el) => {
   html += `<details><summary>All palette colours</summary>${rest.map((t) => row(t, "")).join("")}</details>`;
 
   body.innerHTML = html;
+  refreshLayout();
   wheel.classList.remove("open");
   const first = own[0] ?? around[0];
   if (first) openWheel(first.token);
@@ -338,6 +515,26 @@ const chooseFile = (query) => {
 body.addEventListener("click", (e) => {
   const r = e.target.closest(".row");
   if (r) return openWheel(r.dataset.token);
+  if (e.target.closest("[data-text-save]")) return saveText();
+  const step = e.target.closest("[data-step]");
+  if (step) {
+    const key = `${step.dataset.step}Steps`;
+    layout[key] += Number(step.dataset.by);
+    return refreshLayout();
+  }
+  if (e.target.closest("[data-layout-save]")) return saveLayout();
+  if (e.target.closest("[data-layout-undo]")) {
+    previewLayout(true);
+    Object.assign(layout, { sizeSteps: 0, aboveSteps: 0, belowSteps: 0, weight: null, width: null });
+    const range = body.querySelector(".width");
+    if (range) range.value = String(Math.min(100, layout.startWidth));
+    return refreshLayout();
+  }
+  if (e.target.closest("[data-text-undo]")) {
+    previewText(null);
+    body.querySelector(".text-edit").value = textEdit.text;
+    return refreshText();
+  }
   const replace = e.target.closest("[data-replace]");
   if (replace) return chooseFile(`file=${replace.dataset.replace}`);
   const ball = e.target.closest("[data-ball]");
@@ -356,6 +553,51 @@ fileInput.addEventListener("change", async () => {
   // On success the dev server reloads the page; unsaved colours and edit mode survive via sessionStorage.
   statusEl.textContent = out.ok ? `Saved ${out.file}` : `Failed: ${out.error}`;
 });
+
+const refreshText = () => {
+  const changed = body.querySelector(".text-edit").value.replace(/\s+/g, " ").trim() !== textEdit.text;
+  body.querySelector("[data-text-save]").disabled = !changed;
+  body.querySelector("[data-text-undo]").disabled = !changed;
+};
+body.addEventListener("input", (e) => {
+  if (e.target.matches(".width") && layout) {
+    layout.width = Number(e.target.value);
+    return refreshLayout();
+  }
+  if (e.target.matches(".weight") && layout) {
+    layout.weight = e.target.value;
+    return refreshLayout();
+  }
+  if (!e.target.matches(".text-edit") || !textEdit) return;
+  previewText(e.target.value.replace(/\s+/g, " "));
+  refreshText();
+});
+const saveText = async () => {
+  const { el, text } = textEdit;
+  // Headings near the text tell apart words used in several places, like a date shared by two projects.
+  const context = [el.closest("article, li"), el.closest("section")]
+    .map((box) => box?.querySelector("h1, h2, h3, h4")?.textContent.trim().replace(/\s+/g, " "))
+    .filter(Boolean);
+  statusEl.textContent = "Saving…";
+  body.querySelector(".text-msg").textContent = "";
+  const res = await fetch("/__design/text", {
+    method: "POST",
+    body: JSON.stringify({ old: text, text: body.querySelector(".text-edit").value, context }),
+  });
+  const out = await res.json().catch(() => ({ ok: false, error: res.statusText }));
+  if (!out.ok) {
+    statusEl.textContent = "Not saved";
+    body.querySelector(".text-msg").textContent = out.error;
+    return;
+  }
+  // The dev server reloads the page with the new text; until then keep the preview as it is.
+  textEdit.before = textEdit.nodes.map((n) => n.nodeValue);
+  textEdit.text = body.querySelector(".text-edit").value.replace(/\s+/g, " ").trim();
+  refreshText();
+  statusEl.textContent = `Saved to ${out.file}`;
+};
+// Keep typing in the editor from reaching the page's own shortcuts (e.g. "/" opens search). Esc still stops editing.
+shadow.addEventListener("keydown", (e) => e.key !== "Escape" && e.stopPropagation());
 
 // ---- saving ----
 saveBtn.addEventListener("click", async () => {
@@ -440,6 +682,9 @@ try {
   if (saved) {
     for (const [t, hex] of saved.changes) setColor(t, hex);
     setEditing(Boolean(saved.on));
+    const s = saved.selected;
+    const el = s && document.querySelectorAll(`[data-astro-source-file="${CSS.escape(s.file)}"][data-astro-source-loc="${s.loc}"]`)[s.index];
+    if (saved.on && el) select(el);
   }
 } catch {
   sessionStorage.removeItem(STORE);
