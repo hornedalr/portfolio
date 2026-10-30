@@ -1,0 +1,381 @@
+---
+// Dev-only cord tuning playground. Injected by integrations/cord-playground.mjs under `astro dev`; never built.
+import BaseLayout from "../layouts/BaseLayout.astro";
+import PullCord from "../components/PullCord.astro";
+
+interface Control {
+  key: string;
+  label: string;
+  min: number;
+  max: number;
+  step: number;
+  hint: string;
+}
+
+const groups: { title: string; controls: Control[] }[] = [
+  {
+    title: "Pull & trigger",
+    controls: [
+      { key: "maxStretch", label: "Max stretch", min: 30, max: 220, step: 1, hint: "How far (px) the cord can be pulled past rest. It gets harder near the limit." },
+      { key: "trigger", label: "Trigger distance", min: 10, max: 180, step: 1, hint: "Pull past rest (px) needed for a release to switch theme." },
+    ],
+  },
+  {
+    title: "Release & bounce",
+    controls: [
+      { key: "reelStiffness", label: "Reel snap", min: 0.02, max: 0.2, step: 0.005, hint: "How hard the reel winds back. Higher = faster snap and a bigger fling up." },
+      { key: "handleWeight", label: "Ball weight", min: 0.5, max: 10, step: 0.1, hint: "Heavier ball swings slower and drags the cord more." },
+      { key: "gravity", label: "Gravity", min: 0.1, max: 2, step: 0.05, hint: "Pull downward per step. Higher = snappier fall, smaller bounce." },
+      { key: "damping", label: "Air drag", min: 0.9, max: 1, step: 0.001, hint: "Velocity kept each step. 1 = no drag (swings forever), lower = settles faster." },
+      { key: "maxSpeed", label: "Speed limit", min: 5, max: 60, step: 1, hint: "Caps how fast any point can move (px/step)." },
+    ],
+  },
+  {
+    title: "Cord feel",
+    controls: [
+      { key: "iterations", label: "Stiffness passes", min: 2, max: 40, step: 1, hint: "Solver passes per step. Low = stretchy/rubbery, high = taut string." },
+      { key: "segRecover", label: "Sideways recover", min: 0.05, max: 1, step: 0.01, hint: "How fast a sideways over-pull eases back after release." },
+      { key: "points", label: "Cord segments", min: 6, max: 30, step: 1, hint: "More points = smoother curve and more wobble detail." },
+    ],
+  },
+  {
+    title: "Look",
+    controls: [
+      { key: "restLength", label: "Cord length", min: 60, max: 220, step: 1, hint: "Hanging length at rest (px)." },
+      { key: "ballRadius", label: "Ball size", min: 8, max: 24, step: 0.5, hint: "Yarn ball radius (px). The touch target stays at least 44px." },
+      { key: "cordWidth", label: "Cord thickness", min: 1, max: 6, step: 0.1, hint: "Stroke width at rest." },
+      { key: "tensionThinning", label: "Tension thinning", min: 0, max: 3, step: 0.1, hint: "How much thinner the cord gets at full stretch." },
+    ],
+  },
+  {
+    title: "Tap & hover",
+    controls: [
+      { key: "tapTug", label: "Tap tug", min: 0, max: 8, step: 0.1, hint: "Strength of the tug when tapping the ball or pressing Enter/Space." },
+      { key: "hoverNudge", label: "Hover nudge", min: 0, max: 6, step: 0.1, hint: "Sideways sway when a mouse moves onto the ball." },
+    ],
+  },
+];
+
+const button =
+  "inline-flex min-h-10 items-center justify-center border border-wool-300 px-3 text-sm font-semibold hover:bg-wool-100 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-bark-600 dark:border-wool-700 dark:hover:bg-wool-800";
+---
+
+<BaseLayout title="Cord playground" description="Dev-only tuning playground for the pull cord.">
+  <div class="mx-auto grid max-w-6xl gap-6 p-4 lg:grid-cols-[minmax(0,1fr)_26rem] lg:p-6">
+    <div class="flex flex-col gap-4 lg:sticky lg:top-6 lg:self-start">
+      <header class="flex flex-wrap items-baseline justify-between gap-2">
+        <h1 class="text-2xl font-bold tracking-tight">Cord playground</h1>
+        <p class="text-sm text-wool-600 dark:text-wool-400">Dev only &middot; not deployed</p>
+      </header>
+
+      <div
+        class="relative h-[26rem] overflow-hidden border border-wool-300 bg-wool-50 dark:border-wool-700 dark:bg-wool-950"
+      >
+        <div class="absolute inset-x-0 top-0 h-px bg-wool-300 dark:bg-wool-700"></div>
+        <PullCord class="top-0 left-1/2 -ml-12" debug />
+        <p class="absolute bottom-3 left-3 text-xs text-wool-600 dark:text-wool-400">
+          Drag the ball. Release past the trigger to switch theme.
+        </p>
+        <dl class="absolute top-3 left-3 grid grid-cols-[auto_auto] gap-x-3 font-mono text-xs text-wool-700 dark:text-wool-300">
+          <dt>stretch</dt><dd data-out="stretch">0</dd>
+          <dt>armed</dt><dd data-out="armed">no</dd>
+          <dt>bounce</dt><dd data-out="bounce">-</dd>
+          <dt>settle</dt><dd data-out="settle">-</dd>
+          <dt>theme</dt><dd data-out="theme">-</dd>
+        </dl>
+      </div>
+
+      <div class="border border-wool-300 p-3 dark:border-wool-700">
+        <div class="mb-2 flex items-center justify-between text-xs text-wool-600 dark:text-wool-400">
+          <span>Ball position (last 4s)</span>
+          <span class="flex gap-3">
+            <span><span class="inline-block h-0.5 w-3 bg-wool-700 align-middle dark:bg-wool-300"></span> height vs rest</span>
+            <span><span class="inline-block h-0.5 w-3 bg-bark-600 align-middle dark:bg-bark-300"></span> stretch</span>
+          </span>
+        </div>
+        <canvas data-graph class="h-36 w-full" aria-label="Graph of ball position over time" role="img"></canvas>
+      </div>
+
+      <div class="flex flex-wrap gap-2">
+        <span class="self-center text-sm font-semibold">Test pull:</span>
+        <button type="button" class={button} data-pull="short">Short</button>
+        <button type="button" class={button} data-pull="trigger">At trigger</button>
+        <button type="button" class={button} data-pull="medium">Medium</button>
+        <button type="button" class={button} data-pull="max">Max</button>
+        <button type="button" class={button} data-pull="swing">Sideways</button>
+      </div>
+
+      <label class="flex items-center gap-3 text-sm">
+        <span class="font-semibold">Slow motion</span>
+        <input data-timescale type="range" min="0.1" max="1" step="0.05" value="1" class="flex-1 accent-bark-700" />
+        <output data-timescale-out class="w-12 text-right font-mono">1&times;</output>
+      </label>
+    </div>
+
+    <form data-panel class="flex flex-col gap-5" onsubmit="return false">
+      <div class="sticky top-0 z-10 -mx-1 flex flex-wrap items-center gap-2 bg-wool-50 px-1 py-2 dark:bg-wool-950">
+        <button
+          type="button"
+          data-action="save"
+          class="inline-flex min-h-10 items-center bg-bark-700 px-4 text-sm font-semibold text-white hover:bg-bark-800 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-bark-600 disabled:opacity-50"
+        >
+          Save to project
+        </button>
+        <button type="button" class={button} data-action="copy">Copy JSON</button>
+        <button type="button" class={button} data-action="revert">Revert</button>
+        <button type="button" class={button} data-action="defaults">Defaults</button>
+        <p data-status class="w-full text-xs text-wool-600 dark:text-wool-400" aria-live="polite">Matches saved settings.</p>
+      </div>
+
+      {
+        groups.map((group) => (
+          <fieldset class="flex flex-col gap-4 border-t border-wool-300 pt-4 dark:border-wool-700">
+            <legend class="pr-2 text-sm font-bold tracking-wide text-wool-700 uppercase dark:text-wool-300">{group.title}</legend>
+            {group.controls.map((c) => (
+              <div class="flex flex-col gap-1">
+                <div class="flex items-center justify-between gap-2">
+                  <label for={`c-${c.key}`} class="text-sm font-semibold">
+                    {c.label}
+                  </label>
+                  <input
+                    type="number"
+                    data-num={c.key}
+                    min={c.min}
+                    max={c.max}
+                    step={c.step}
+                    aria-label={`${c.label} value`}
+                    class="w-20 border border-wool-300 bg-transparent px-1.5 py-0.5 text-right font-mono text-sm dark:border-wool-700"
+                  />
+                </div>
+                <input
+                  id={`c-${c.key}`}
+                  type="range"
+                  data-key={c.key}
+                  min={c.min}
+                  max={c.max}
+                  step={c.step}
+                  class="accent-bark-700"
+                />
+                <p class="text-xs text-wool-600 dark:text-wool-400">{c.hint}</p>
+              </div>
+            ))}
+          </fieldset>
+        ))
+      }
+    </form>
+  </div>
+</BaseLayout>
+
+<script>
+  import { cordSettings, DEFAULT_SETTINGS, type CordSettings } from "../scripts/cord-settings";
+
+  const saved: CordSettings = { ...cordSettings };
+  let current: CordSettings = { ...saved };
+  let timeScale = 1;
+
+  const $ = <T extends Element>(sel: string) => document.querySelector<T>(sel)!;
+  const ranges = [...document.querySelectorAll<HTMLInputElement>("[data-key]")];
+  const nums = [...document.querySelectorAll<HTMLInputElement>("[data-num]")];
+  const status = $<HTMLParagraphElement>("[data-status]");
+  const saveBtn = $<HTMLButtonElement>('[data-action="save"]');
+  const out = (name: string) => $<HTMLElement>(`[data-out="${name}"]`);
+
+  const isDirty = () => (Object.keys(saved) as (keyof CordSettings)[]).some((k) => saved[k] !== current[k]);
+
+  const syncStatus = (msg?: string) => {
+    const dirty = isDirty();
+    saveBtn.disabled = !dirty;
+    status.textContent = msg ?? (dirty ? "Unsaved changes." : "Matches saved settings.");
+  };
+
+  const push = () => {
+    window.dispatchEvent(new CustomEvent("cord:tune", { detail: { settings: { ...current }, timeScale } }));
+    syncStatus();
+  };
+
+  const fill = () => {
+    for (const el of [...ranges, ...nums]) {
+      const key = (el.dataset.key ?? el.dataset.num) as keyof CordSettings;
+      el.value = String(current[key]);
+    }
+  };
+
+  const set = (key: keyof CordSettings, value: number) => {
+    if (!Number.isFinite(value)) return;
+    current = { ...current, [key]: value };
+    for (const el of [...ranges, ...nums]) {
+      if ((el.dataset.key ?? el.dataset.num) === key && el !== document.activeElement) el.value = String(value);
+    }
+    push();
+  };
+
+  for (const el of ranges) el.addEventListener("input", () => set(el.dataset.key as keyof CordSettings, el.valueAsNumber));
+  for (const el of nums) {
+    el.addEventListener("input", () => set(el.dataset.num as keyof CordSettings, el.valueAsNumber));
+    el.addEventListener("change", fill);
+  }
+
+  const ts = $<HTMLInputElement>("[data-timescale]");
+  ts.addEventListener("input", () => {
+    timeScale = ts.valueAsNumber;
+    $<HTMLOutputElement>("[data-timescale-out]").textContent = `${timeScale.toFixed(2)}×`;
+    push();
+  });
+
+  saveBtn.addEventListener("click", async () => {
+    saveBtn.disabled = true;
+    status.textContent = "Saving…";
+    try {
+      const res = await fetch("/__cord/save", { method: "POST", body: JSON.stringify(current) });
+      const body = await res.json();
+      if (!body.ok) throw new Error(body.error);
+      Object.assign(saved, body.settings);
+      syncStatus("Saved to src/data/cord-settings.json. Rebuild and deploy to ship it.");
+    } catch (err) {
+      syncStatus(`Save failed: ${err}`);
+    }
+  });
+
+  $('[data-action="copy"]').addEventListener("click", async () => {
+    const json = JSON.stringify(current, null, 2);
+    try {
+      await navigator.clipboard.writeText(json);
+      syncStatus("Copied settings JSON to clipboard.");
+    } catch {
+      console.log(json);
+      syncStatus("Clipboard blocked; JSON printed to the console.");
+    }
+  });
+
+  $('[data-action="revert"]').addEventListener("click", () => {
+    current = { ...saved };
+    fill();
+    push();
+  });
+
+  $('[data-action="defaults"]').addEventListener("click", () => {
+    current = { ...DEFAULT_SETTINGS };
+    fill();
+    push();
+  });
+
+  for (const b of document.querySelectorAll<HTMLButtonElement>("[data-pull]")) {
+    b.addEventListener("click", () => {
+      const kind = b.dataset.pull;
+      const distance =
+        kind === "short" ? current.trigger * 0.6
+        : kind === "trigger" ? current.trigger + 2
+        : kind === "medium" ? (current.trigger + current.maxStretch) / 2
+        : kind === "swing" ? current.trigger + 10
+        : current.maxStretch * 0.97;
+      window.dispatchEvent(
+        new CustomEvent("cord:autopull", { detail: { distance, sideways: kind === "swing" ? 90 : 0 } }),
+      );
+    });
+  }
+
+  // Live readouts and graph.
+  const canvas = $<HTMLCanvasElement>("[data-graph]");
+  const ctx = canvas.getContext("2d")!;
+  const SAMPLES = 240;
+  const offsets: number[] = [];
+  const stretches: number[] = [];
+  let wasDragging = false;
+  let releaseAt = 0;
+  let peak = 0;
+  let idleTimer = 0;
+
+  const draw = () => {
+    const dpr = devicePixelRatio || 1;
+    const w = canvas.clientWidth;
+    const h = canvas.clientHeight;
+    if (canvas.width !== w * dpr) {
+      canvas.width = w * dpr;
+      canvas.height = h * dpr;
+    }
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    ctx.clearRect(0, 0, w, h);
+    const styles = getComputedStyle(document.documentElement);
+    const dark = document.documentElement.classList.contains("dark");
+    const ink = styles.getPropertyValue(dark ? "--color-wool-300" : "--color-wool-700");
+    const accent = styles.getPropertyValue(dark ? "--color-bark-300" : "--color-bark-600");
+    const faint = styles.getPropertyValue(dark ? "--color-wool-700" : "--color-wool-300");
+    const range = Math.max(current.maxStretch, 60) * 1.15;
+    const zero = h * 0.35;
+    const y = (v: number) => zero + (v / range) * (h - zero - 4);
+    const x = (i: number) => (i / (SAMPLES - 1)) * w;
+
+    ctx.lineWidth = 1;
+    ctx.strokeStyle = faint;
+    ctx.setLineDash([4, 4]);
+    ctx.beginPath();
+    ctx.moveTo(0, y(current.trigger));
+    ctx.lineTo(w, y(current.trigger));
+    ctx.stroke();
+    ctx.setLineDash([]);
+    ctx.beginPath();
+    ctx.moveTo(0, zero);
+    ctx.lineTo(w, zero);
+    ctx.stroke();
+    ctx.fillStyle = faint;
+    ctx.font = "10px ui-monospace, monospace";
+    ctx.fillText("rest", 4, zero - 3);
+    ctx.fillText("trigger", 4, y(current.trigger) - 3);
+
+    const line = (data: number[], color: string) => {
+      ctx.strokeStyle = color;
+      ctx.lineWidth = 1.5;
+      ctx.beginPath();
+      data.forEach((v, i) => (i ? ctx.lineTo(x(i + SAMPLES - data.length), y(v)) : ctx.moveTo(x(SAMPLES - data.length), y(v))));
+      ctx.stroke();
+    };
+    line(stretches, accent);
+    line(offsets, ink);
+  };
+
+  window.addEventListener("cord:frame", (e) => {
+    const d = (e as CustomEvent<{ offset: number; stretch: number; armed: boolean; dragging: boolean }>).detail;
+    offsets.push(d.offset);
+    stretches.push(d.stretch);
+    if (offsets.length > SAMPLES) {
+      offsets.shift();
+      stretches.shift();
+    }
+    out("stretch").textContent = `${d.stretch.toFixed(0)}px`;
+    out("armed").textContent = d.armed ? "YES" : "no";
+
+    if (!wasDragging && d.dragging) {
+      clearTimeout(idleTimer);
+      releaseAt = 0;
+      out("bounce").textContent = "…";
+      out("settle").textContent = "…";
+    }
+    if (wasDragging && !d.dragging) {
+      releaseAt = performance.now();
+      peak = 0;
+      out("settle").textContent = "…";
+    }
+    wasDragging = d.dragging;
+    if (releaseAt) {
+      peak = Math.min(peak, d.offset);
+      out("bounce").textContent = `${Math.max(0, -peak).toFixed(0)}px up`;
+      clearTimeout(idleTimer);
+      const t = performance.now();
+      idleTimer = window.setTimeout(() => {
+        out("settle").textContent = `${((t - releaseAt) / 1000).toFixed(2)}s`;
+        releaseAt = 0;
+      }, 200);
+    }
+    draw();
+  });
+
+  const syncTheme = () => {
+    out("theme").textContent = document.documentElement.classList.contains("dark") ? "dark" : "light";
+    draw();
+  };
+  new MutationObserver(syncTheme).observe(document.documentElement, { attributes: true, attributeFilter: ["class"] });
+
+  fill();
+  syncStatus();
+  syncTheme();
+</script>
