@@ -16,6 +16,8 @@ export interface CordSettings extends RopePhysics {
   cordWidth: number;
   /** How much thinner the cord gets at full stretch. */
   tensionThinning: number;
+  /** Extra invisible grab margin (px) around the ball while it is moving. */
+  swingGrab: number;
 }
 
 export const DEFAULT_SETTINGS: CordSettings = {
@@ -28,6 +30,7 @@ export const DEFAULT_SETTINGS: CordSettings = {
   ballRadius: 13,
   cordWidth: 2.5,
   tensionThinning: 1.1,
+  swingGrab: 28,
 };
 
 /** Merges untrusted values over defaults, keeping only known numeric keys. */

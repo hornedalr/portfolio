@@ -53,7 +53,7 @@ const ballScale = s.ballRadius / 13;
     aria-pressed="false"
     aria-label="Dark mode"
     title="Pull for dark mode"
-    class="pointer-events-auto absolute top-0 left-0 size-11 cursor-grab touch-none select-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-bark-600 active:cursor-grabbing"
+    class="pointer-events-auto absolute top-0 left-0 size-11 cursor-grab touch-none select-none before:absolute before:inset-[calc(var(--grab,0px)*-1)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-bark-600 active:cursor-grabbing"
     style={`transform: translate(${cx - 22}px, ${ballY - 22}px)`}
   >
   </button>
@@ -108,6 +108,7 @@ const ballScale = s.ballRadius / 13;
     };
 
     let armed = false;
+    let grabSize = 0;
     const render = () => {
       cord.setAttribute("d", rope.toPath());
       const hx = rope.handleX;
@@ -119,6 +120,13 @@ const ballScale = s.ballRadius / 13;
         `translate(${hx.toFixed(1)} ${hy.toFixed(1)}) rotate(${angle.toFixed(1)}) scale(${(s.ballRadius / 13).toFixed(3)})`,
       );
       handle.style.transform = `translate(${(hx - 22).toFixed(1)}px, ${(hy - 22).toFixed(1)}px)`;
+
+      // A moving ball is hard to catch, so widen the invisible hit area until it settles.
+      const grab = rope.isDragging || rope.energy > 0.05 ? s.swingGrab : 0;
+      if (grab !== grabSize) {
+        grabSize = grab;
+        handle.style.setProperty("--grab", `${grab}px`);
+      }
 
       const tension = Math.min(rope.stretch / Math.max(s.maxStretch, 1), 1);
       cord.setAttribute("stroke-width", Math.max(s.cordWidth - tension * s.tensionThinning, 0.5).toFixed(2));
@@ -267,6 +275,8 @@ const ballScale = s.ballRadius / 13;
     });
 
     if (debug) {
+      // Make the otherwise invisible grab area visible while tuning.
+      handle.classList.add("before:outline-1", "before:outline-dashed", "before:outline-bark-500");
       window.addEventListener("cord:tune", (e) => {
         const { settings, timeScale: ts } = (e as CustomEvent<{ settings: CordSettings; timeScale: number }>).detail;
         const rebuild = settings.restLength !== s.restLength || settings.points !== s.points;
