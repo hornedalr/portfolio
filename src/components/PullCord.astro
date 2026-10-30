@@ -290,16 +290,34 @@ const ballScale = s.ballRadius / 13;
       bubble.style.left = `${(headX - 16).toFixed(1)}px`;
       bubble.style.top = `${(headY - 30).toFixed(1)}px`;
     };
+    let baaHide = 0;
     const baa = () => {
       sheep?.toggleAttribute("data-baa", true);
       placeBubble();
       bubble?.toggleAttribute("data-show", true);
-      window.setTimeout(() => {
+      clearTimeout(baaHide);
+      baaHide = window.setTimeout(() => {
         sheep?.removeAttribute("data-baa");
         bubble?.removeAttribute("data-show");
       }, 2000);
     };
     window.setTimeout(baa, 10_000);
+
+    // Every 5th pull in a row the sheep baas, 2s after that pull. A pause longer than STREAK_GAP_MS starts a new row.
+    const PULLS_PER_BAA = 5;
+    const STREAK_GAP_MS = 4000;
+    let pulls = 0;
+    let lastPull = 0;
+    const countPull = () => {
+      const now = performance.now();
+      if (now - lastPull > STREAK_GAP_MS) pulls = 0;
+      lastPull = now;
+      pulls += 1;
+      if (pulls === PULLS_PER_BAA) {
+        pulls = 0;
+        window.setTimeout(baa, 2000);
+      }
+    };
 
     const render = () => {
       cord.setAttribute("d", rope.toPath());
@@ -403,7 +421,10 @@ const ballScale = s.ballRadius / 13;
     const finishPull = (wasDrag: boolean) => {
       const pulledEnough = rope.stretch >= s.trigger;
       rope.endDrag();
-      if (wasDrag && pulledEnough) toggleTheme();
+      if (wasDrag && pulledEnough) {
+        toggleTheme();
+        countPull();
+      }
       if (reduceMotion.matches) rope.reset();
       render();
       wake();
@@ -470,6 +491,7 @@ const ballScale = s.ballRadius / 13;
         wake();
       }
       toggleTheme();
+      countPull();
     });
 
     handle.addEventListener("pointerenter", (e) => {
