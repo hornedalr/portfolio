@@ -3,7 +3,16 @@
 /* Theme is class-driven so the pull cord can override the OS preference. */
 @custom-variant dark (&:where(.dark, .dark *));
 
+/* Self-hosted script face for the site name (SIL OFL, see public/fonts/Sacramento-OFL.txt). */
+@font-face {
+  font-family: "Sacramento";
+  src: url("/fonts/sacramento.woff2") format("woff2");
+  font-weight: 400;
+  font-display: swap;
+}
+
 @theme {
+  --font-script: "Sacramento", cursive;
   --font-sans: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
   --font-mono: ui-monospace, SFMono-Regular, "Cascadia Code", Menlo, Consolas, monospace;
 
