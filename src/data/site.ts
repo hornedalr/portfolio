@@ -1,8 +1,11 @@
 import type { ImageMetadata } from "astro";
-import orbit from "../assets/projects/orbit.png";
-import ledger from "../assets/projects/ledger.png";
-import trailhead from "../assets/projects/trailhead.png";
-import pixelkit from "../assets/projects/pixelkit.png";
+import tamedWool from "../assets/projects/tamed-wool.jpg";
+import naraGrannar from "../assets/projects/nara-grannar.jpg";
+import goodWool from "../assets/projects/good-wool-collective.jpg";
+import skymningCeiling from "../assets/projects/skymning-ceiling.jpg";
+import skymningTable from "../assets/projects/skymning-table.jpg";
+import skymningVarme from "../assets/projects/skymning-varme.jpg";
+import varme from "../assets/projects/varme.jpg";
 import portrait from "../assets/portrait.png";
 
 export const profile = {
@@ -32,50 +35,91 @@ export interface Project {
 
 export const projects: Project[] = [
   {
-    title: "Orbit Dashboard",
-    summary: "A real-time analytics dashboard that streams satellite telemetry and renders it with sub-50ms updates.",
-    image: orbit,
+    title: "Tamed Wool",
+    summary:
+      "My degree project at Konstfack, and the ROSLAGEN collection. How can Swedish wool take more space in the lighting industry? I shaped wool at a large scale without blending it with polyester-based binders, taming it until the material could start to carry itself.",
+    image: tamedWool,
     details: [
-      { label: "Date", value: "March 2025" },
-      { label: "Duration", value: "6 weeks" },
-      { label: "Dimensions", value: "120 × 80 cm" },
-    ],
-    alt: "Cream background with a charcoal ring orbiting a pale circle and a small brown dot",
-  },
-  {
-    title: "Ledger Lite",
-    summary: "A privacy-first budgeting app that keeps all data on-device and works fully offline.",
-    image: ledger,
-    details: [
-      { label: "Date", value: "November 2024" },
-      { label: "Duration", value: "3 weeks" },
-      { label: "Dimensions", value: "60 × 60 cm" },
-    ],
-    alt: "Oatmeal to grey gradient with a rising bar chart, one bar highlighted in brown",
-  },
-  {
-    title: "Trailhead",
-    summary: "A hiking guide site with static maps and elevation profiles, scoring 100 on every Lighthouse category.",
-    image: trailhead,
-    details: [
-      { label: "Date", value: "June 2024" },
+      { label: "Date", value: "May 2026" },
       { label: "Duration", value: "2 months" },
-      { label: "Dimensions", value: "200 × 140 cm" },
+      { label: "Exhibited", value: "Konstfack Spring Exhibition" },
     ],
-    alt: "Grey gradient behind a cream mountain ridge and a pale brown sun",
+    alt: "Round wall lamp: a glowing disc of pale wool set in a dark circular backplate on a dark wall",
   },
   {
-    title: "PixelKit",
-    summary: "An open-source design token toolkit that exports themes to CSS, iOS and Android from a single source.",
-    image: pixelkit,
+    title: "nära Grannar",
+    summary:
+      "A spatial light object in wool and clay. The wool floats and only comes alive with light; the clay carries and positions the light source. Each material depends on the other. The wool comes from endangered Swedish landrace sheep: Värmland, Hälsinge and Gestrike.",
+    image: naraGrannar,
     details: [
-      { label: "Date", value: "January 2024" },
-      { label: "Duration", value: "10 days" },
-      { label: "Dimensions", value: "40 × 30 cm" },
+      { label: "Date", value: "January 2026" },
+      { label: "Materials", value: "Wool, clay" },
+      { label: "Exhibited", value: "Moderna Dansteatern, Skeppsholmen" },
     ],
-    alt: "Charcoal background with a grid of cream and grey squares, one in brown",
+    alt: "Black and white studio photo: a large pale wool form hangs from the ceiling while a person walks past",
+  },
+  {
+    title: "Good Wool Collective",
+    summary:
+      "Several of my Swedish wool lamps shown at Bergstrand Consultancy during a Good Wool Collective event in Stockholm, in a room of fashion and interior brands gathered to talk about the future of wool beyond fashion and textiles.",
+    image: goodWool,
+    details: [
+      { label: "Date", value: "February 2026" },
+      { label: "Place", value: "Bergstrand Consultancy, Stockholm" },
+    ],
+    alt: "Event room with clothes on rails and a long table where several glowing wool lamps stand",
+  },
+  {
+    title: "Skymning ceiling lamp",
+    summary: "Twilight's own shifts in wool. A ceiling lamp in a blend of dark Hälsinge and light Gestrike landrace wool.",
+    image: skymningCeiling,
+    details: [
+      { label: "Date", value: "November 2025" },
+      { label: "Dimensions", value: "800 × 550 × 550 mm" },
+      { label: "Materials", value: "Hälsinge and Gestrike wool" },
+    ],
+    alt: "A large lumpy wool lamp hanging and glowing, dark and pale wool marbled together, against a grey wall",
+  },
+  {
+    title: "Skymning table lamp",
+    summary:
+      "A table lamp in Swedish landrace wool. The black wool with brown tones comes from Hälsinge sheep and the light wool from Gestrike sheep.",
+    image: skymningTable,
+    details: [
+      { label: "Date", value: "November 2025" },
+      { label: "Type", value: "Table lamp" },
+      { label: "Materials", value: "Hälsinge and Gestrike wool" },
+    ],
+    alt: "A dark, rugged wool table lamp glowing softly from within on a shelf",
+  },
+  {
+    title: "Skymning and Värme",
+    summary: "Where twilight meets warmth: the two series side by side as table lamps, shown at the Konstfack Christmas market.",
+    image: skymningVarme,
+    details: [
+      { label: "Date", value: "November 2025" },
+      { label: "Type", value: "Table lamps" },
+    ],
+    alt: "Two wool table lamps on a shelf, one dark and one glowing amber",
+  },
+  {
+    title: "Värme",
+    summary: "Three shapes of wool lamp: ceiling, wall and table lamp, in wool from Gestrike sheep in Roslagen.",
+    image: varme,
+    details: [
+      { label: "Date", value: "February 2025" },
+      { label: "Type", value: "Ceiling, wall and table lamp" },
+      { label: "Materials", value: "Gestrike wool" },
+    ],
+    alt: "A dim living room lit by three amber wool lamps: one on the wall, one hanging and one on a side table",
   },
 ];
 
-/** URL-safe id fragment, e.g. "Orbit Dashboard" -> "orbit-dashboard". */
-export const slug = (text: string) => text.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
+/** URL-safe id fragment, e.g. "nära Grannar" -> "nara-grannar". */
+export const slug = (text: string) =>
+  text
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-|-$/g, "");
