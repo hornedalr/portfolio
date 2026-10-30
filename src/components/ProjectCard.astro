@@ -14,7 +14,7 @@ const width = wide ? 1000 : 500;
 const height = Math.round((width * project.image.height) / project.image.width);
 ---
 
-<article aria-labelledby={headingId} class:list={[wide && "md:col-span-2"]}>
+<article aria-labelledby={headingId} class:list={["reveal", wide && "md:col-span-2"]}>
   <Image
     src={project.image}
     alt={project.alt}
