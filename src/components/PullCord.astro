@@ -77,35 +77,35 @@ const ballScale = s.ballRadius / 13;
             {legs.map((leg) => (
               <g data-leg data-x={leg.x} data-y={leg.y} data-sign={leg.sign} transform={`translate(${leg.x} ${leg.y})`}>
                 <g class:list={["motion-safe:animate-[leg-sway_3.6s_ease-in-out_infinite]", leg.delay]}>
-                  <rect x="-8" y="-10" width="16" height="42" rx="8" class="fill-wool-950 dark:fill-wool-800" />
+                  <rect x="-8" y="-10" width="16" height="42" rx="8" class="fill-wool-800" />
                   <g data-knee transform="translate(0 30)">
                     <g class:list={[leg.sign > 0 ? "motion-safe:animate-[knee-front_3.6s_ease-in-out_infinite]" : "motion-safe:animate-[knee-hind_3.6s_ease-in-out_infinite]", leg.delay]}>
-                      <rect x="-7" y="-6" width="14" height="38" rx="7" class="fill-wool-950 dark:fill-wool-800" />
+                      <rect x="-7" y="-6" width="14" height="38" rx="7" class="fill-wool-800" />
                     </g>
                   </g>
                 </g>
               </g>
             ))}
-            <g class="fill-wool-800 stroke-wool-400 dark:fill-wool-50 dark:stroke-wool-600" stroke-width="10">
+            <g class="fill-wool-50 stroke-wool-600" stroke-width="10">
               {puffs.map(([x, y, r]) => <circle cx={x} cy={y} r={r} />)}
             </g>
-            <g class="fill-wool-800 dark:fill-wool-50">
+            <g class="fill-wool-50">
               {puffs.map(([x, y, r]) => <circle cx={x} cy={y} r={r} />)}
             </g>
             <g transform="translate(262 136)">
               <g class="transition-[rotate] duration-300 ease-out motion-safe:group-data-[baa]/sheep:-rotate-20">
                 <g transform="translate(30 -4) rotate(14)">
-                  <g class="fill-wool-950 dark:fill-wool-800">
+                  <g class="fill-wool-800">
                     <ellipse cx="-30" cy="-26" rx="22" ry="10" transform="rotate(-30 -30 -26)" />
                     <ellipse cx="34" cy="-22" rx="22" ry="10" transform="rotate(30 34 -22)" />
                     <ellipse cx="2" cy="10" rx="36" ry="46" />
                   </g>
-                  <g class="fill-wool-200 dark:fill-wool-50">
+                  <g class="fill-wool-50">
                     <circle cx="-12" cy="0" r="6" />
                     <circle cx="16" cy="0" r="6" />
                   </g>
                   <ellipse cx="2" cy="38" rx="9" ry="7" class="fill-bark-300 opacity-0 transition-opacity duration-200 group-data-[baa]/sheep:opacity-100" />
-                  <circle cx="0" cy="-42" r="18" class="fill-wool-800 stroke-wool-400 dark:fill-wool-50 dark:stroke-wool-600" stroke-width="5" />
+                  <circle cx="0" cy="-42" r="18" class="fill-wool-50 stroke-wool-600" stroke-width="5" />
                 </g>
               </g>
             </g>
