@@ -275,7 +275,7 @@ const ballScale = s.ballRadius / 13;
       }
     };
 
-    // After a while the sheep lifts its head and baas; a thought bubble floats next to its head for 2s.
+    // The sheep lifts its head and baas; a thought bubble floats next to its head for 2s.
     const sheep = ballEl.querySelector<SVGGElement>("[data-sheep]");
     const bubble = root.querySelector<HTMLElement>("[data-baa]");
     const placeBubble = () => {
@@ -301,7 +301,8 @@ const ballScale = s.ballRadius / 13;
         bubble?.removeAttribute("data-show");
       }, 2000);
     };
-    window.setTimeout(baa, 10_000);
+    // First baa 3.4s after the intro swing begins (the intro starts as soon as this script runs, on every load).
+    window.setTimeout(baa, 3_400);
 
     // Every 5th pull in a row the sheep baas, 2s after that pull. A pause longer than STREAK_GAP_MS starts a new row.
     const PULLS_PER_BAA = 5;
