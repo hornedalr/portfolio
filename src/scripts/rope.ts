@@ -1,7 +1,8 @@
 // Lamp-pull cord: a Verlet rope hanging from a spring-loaded reel. Pure math, no DOM, so it can be unit-tested in Node.
 //
-// Pulling past the rest length draws extra cord out of the reel (`ext`); the rope itself stays inextensible.
-// On release the reel springs back and hits a hard stop, which flicks the handle up and lets it bounce and swing.
+// Pulling past the rest length draws extra cord out of the reel (`ext`), spread evenly over every simulated segment
+// so the whole cord lengthens and bends as one. On release the reel springs back and hits a hard stop, which flicks
+// the handle up and lets it bounce and swing.
 
 /** Physics values that can be changed on a live rope without rebuilding it. */
 export interface RopePhysics {
@@ -18,8 +19,6 @@ export interface RopePhysics {
   handleWeight: number;
   /** Reel spring frequency per step; higher = faster snap back and a bigger fling. */
   reelStiffness: number;
-  /** How quickly a sideways over-stretch eases back (0-1 per step). */
-  segRecover: number;
 }
 
 export interface RopeOptions extends Partial<RopePhysics> {
@@ -37,7 +36,6 @@ export const DEFAULT_PHYSICS: RopePhysics = {
   maxSpeed: 24,
   handleWeight: 2.5,
   reelStiffness: 0.08,
-  segRecover: 0.25,
 };
 
 export class Rope {
@@ -107,7 +105,7 @@ export class Rope {
       const vy = this.ys[i] - this.pys[i];
       e += vx * vx + vy * vy;
     }
-    return e + this.ext + Math.abs(this.extV) + (this.segLen - this.baseSeg);
+    return e + this.ext + Math.abs(this.extV);
   }
 
   reset(): void {
@@ -179,11 +177,7 @@ export class Rope {
       }
     }
 
-    // The visible cord leaves the reel straight down; the simulated rope hangs from the end of that run.
-    pxs[0] = xs[0];
-    pys[0] = ys[0];
-    xs[0] = anchorX;
-    ys[0] = anchorY + this.ext;
+    this.segLen = this.baseSeg + this.ext / h;
 
     for (let i = 1; i < n; i++) {
       if (i === h && this.dragging) {
@@ -205,15 +199,6 @@ export class Rope {
       pys[i] = ys[i];
       xs[i] += vx;
       ys[i] += vy + this.p.gravity;
-    }
-
-    // Sideways pulls can exceed the rope length; let segments lengthen while held and ease back after.
-    if (this.dragging) {
-      const d = Math.hypot(xs[h] - xs[0], ys[h] - ys[0]);
-      this.segLen = Math.max(this.baseSeg, d / h);
-    } else if (this.segLen !== this.baseSeg) {
-      this.segLen += (this.baseSeg - this.segLen) * this.p.segRecover;
-      if (this.segLen - this.baseSeg < 0.01) this.segLen = this.baseSeg;
     }
 
     const handleInv = this.dragging ? 0 : inv[h];
@@ -254,7 +239,7 @@ export class Rope {
   /** Smooth SVG path from the anchor through the rope points. */
   toPath(): string {
     const { n, xs, ys } = this;
-    let d = `M${this.o.anchorX.toFixed(1)} ${this.o.anchorY.toFixed(1)} L${xs[0].toFixed(1)} ${ys[0].toFixed(1)}`;
+    let d = `M${xs[0].toFixed(1)} ${ys[0].toFixed(1)}`;
     for (let i = 1; i < n - 1; i++) {
       const mx = (xs[i] + xs[i + 1]) / 2;
       const my = (ys[i] + ys[i + 1]) / 2;
