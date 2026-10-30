@@ -1,7 +1,35 @@
 ---
 // Lamp-pull cord that toggles light/dark mode. Static SVG renders the resting cord; the script adds physics.
 // Settings live in src/data/cord-settings.json; tune them live at /playground during `npm run dev`.
+import { getImage } from "astro:assets";
+import type { ImageMetadata } from "astro";
 import { cordSettings as s } from "../scripts/cord-settings";
+
+// Drop src/assets/cord-ball.png (and cord-ball-dark.png for dark mode) to replace the drawn ball.
+// The cord attaches at the top centre of the image.
+const ballImages = import.meta.glob<{ default: ImageMetadata }>("../assets/cord-ball{,-dark}.png", { eager: true });
+const loadBall = async (name: string) => {
+  const src = ballImages[`../assets/${name}.png`]?.default;
+  if (!src) return undefined;
+  const img = await getImage({ src, width: 128, format: "webp" });
+  const w = 34;
+  return { href: img.src, w, h: (w * src.height) / src.width };
+};
+const ballLight = await loadBall("cord-ball");
+const ballDark = (await loadBall("cord-ball-dark")) ?? ballLight;
+
+// Placeholder sheep, sketched facing right in a 360x300 space and mirrored to face into the page.
+// The middle of its back (199.5, 19) is where the cord attaches.
+const sheepScale = 34 / 297;
+const sheepTransform = `translate(0 -11) scale(${-sheepScale} ${sheepScale}) translate(-199.5 -19)`;
+const puffs = [[180, 70, 46], [128, 86, 42], [232, 86, 42], [96, 130, 40], [262, 128, 38], [140, 148, 46], [208, 150, 46], [176, 112, 52]];
+// sign: +1 front legs (knees bend back), -1 hind legs (hocks bend forward).
+const legs = [
+  { x: 120, y: 180, sign: -1, delay: "[animation-delay:-0.4s]" },
+  { x: 154, y: 186, sign: -1, delay: "[animation-delay:-2.1s]" },
+  { x: 208, y: 186, sign: 1, delay: "[animation-delay:-1.3s]" },
+  { x: 242, y: 180, sign: 1, delay: "[animation-delay:-2.9s]" },
+];
 
 interface Props {
   /** Positioning classes; defaults to hanging from the top-right of the hero. */
@@ -38,15 +66,67 @@ const ballScale = s.ballRadius / 13;
       class="stroke-wool-600 transition-[stroke] duration-150 dark:stroke-wool-400"
     ></path>
     <g data-ball transform={`translate(${cx} ${ballY}) scale(${ballScale})`}>
-      <circle r="13" class="fill-bark-300 stroke-bark-700 dark:fill-bark-500 dark:stroke-bark-200" stroke-width="1.5"></circle>
-      <path
-        d="M-11 -5 C-4 -1 4 -1 11 -5 M-12 2 C-4 6 4 6 12 2 M-6 -11 C-2 -4 -2 4 -6 11 M3 -12 C7 -5 7 5 3 12"
-        fill="none"
-        stroke-width="1.2"
-        class="stroke-bark-700 dark:stroke-bark-200"
-      ></path>
+      {
+        ballLight && ballDark ? (
+          <>
+            <image href={ballLight.href} x={-ballLight.w / 2} y="-11" width={ballLight.w} height={ballLight.h} class="dark:hidden" />
+            <image href={ballDark.href} x={-ballDark.w / 2} y="-11" width={ballDark.w} height={ballDark.h} class="hidden dark:inline" />
+          </>
+        ) : (
+          <g data-sheep class="group/sheep" transform={sheepTransform}>
+            {legs.map((leg) => (
+              <g data-leg data-x={leg.x} data-y={leg.y} data-sign={leg.sign} transform={`translate(${leg.x} ${leg.y})`}>
+                <g class:list={["motion-safe:animate-[leg-sway_3.6s_ease-in-out_infinite]", leg.delay]}>
+                  <rect x="-8" y="-10" width="16" height="42" rx="8" class="fill-wool-950 dark:fill-wool-800" />
+                  <g data-knee transform="translate(0 30)">
+                    <g class:list={[leg.sign > 0 ? "motion-safe:animate-[knee-front_3.6s_ease-in-out_infinite]" : "motion-safe:animate-[knee-hind_3.6s_ease-in-out_infinite]", leg.delay]}>
+                      <rect x="-7" y="-6" width="14" height="38" rx="7" class="fill-wool-950 dark:fill-wool-800" />
+                    </g>
+                  </g>
+                </g>
+              </g>
+            ))}
+            <g class="fill-wool-800 stroke-wool-400 dark:fill-wool-50 dark:stroke-wool-600" stroke-width="10">
+              {puffs.map(([x, y, r]) => <circle cx={x} cy={y} r={r} />)}
+            </g>
+            <g class="fill-wool-800 dark:fill-wool-50">
+              {puffs.map(([x, y, r]) => <circle cx={x} cy={y} r={r} />)}
+            </g>
+            <g transform="translate(262 136)">
+              <g class="transition-[rotate] duration-300 ease-out motion-safe:group-data-[baa]/sheep:-rotate-20">
+                <g transform="translate(30 -4) rotate(14)">
+                  <g class="fill-wool-950 dark:fill-wool-800">
+                    <ellipse cx="-30" cy="-26" rx="22" ry="10" transform="rotate(-30 -30 -26)" />
+                    <ellipse cx="34" cy="-22" rx="22" ry="10" transform="rotate(30 34 -22)" />
+                    <ellipse cx="2" cy="10" rx="36" ry="46" />
+                  </g>
+                  <g class="fill-wool-200 dark:fill-wool-50">
+                    <circle cx="-12" cy="0" r="6" />
+                    <circle cx="16" cy="0" r="6" />
+                  </g>
+                  <ellipse cx="2" cy="38" rx="9" ry="7" class="fill-bark-300 opacity-0 transition-opacity duration-200 group-data-[baa]/sheep:opacity-100" />
+                  <circle cx="0" cy="-42" r="18" class="fill-wool-800 stroke-wool-400 dark:fill-wool-50 dark:stroke-wool-600" stroke-width="5" />
+                </g>
+              </g>
+            </g>
+          </g>
+        )
+      }
     </g>
   </svg>
+  <div
+    data-baa
+    aria-hidden="true"
+    class="pointer-events-none absolute top-0 left-0 z-10 origin-bottom-right -translate-x-full -translate-y-full scale-50 opacity-0 transition-[scale,opacity] duration-300 ease-out data-[show]:scale-100 data-[show]:opacity-100"
+  >
+    <div
+      class="relative rounded-full border border-wool-300 bg-wool-50 px-5 pt-1 pb-2 font-script text-3xl leading-none whitespace-nowrap text-wool-900 shadow-sm dark:border-wool-700 dark:bg-wool-900 dark:text-wool-100"
+    >
+      bääääh
+      <span class="absolute -right-1 -bottom-2.5 size-3 rounded-full border border-wool-300 bg-wool-50 dark:border-wool-700 dark:bg-wool-900"></span>
+      <span class="absolute -right-3 -bottom-5 size-1.5 rounded-full border border-wool-300 bg-wool-50 dark:border-wool-700 dark:bg-wool-900"></span>
+    </div>
+  </div>
   <button
     type="button"
     data-cord-handle
@@ -130,6 +210,97 @@ const ballScale = s.ballRadius / 13;
     let grabSize = 0;
     let dirX = 0;
     let dirY = 1;
+    let ballX = rope.handleX;
+    let ballY = rope.handleY;
+    let ballAngle = 0;
+
+    // Sheep legs: damped springs at hips and knees, driven by the sheep's acceleration so they lag behind its
+    // motion. Knees only bend one way and stop hard at their joint limits.
+    const KNEE_MAX = 30;
+    const KNEE_REST = 4;
+    const legs = [...ballEl.querySelectorAll<SVGGElement>("[data-leg]")].map((el) => ({
+      el,
+      knee: el.querySelector<SVGGElement>("[data-knee]")!,
+      x: Number(el.dataset.x),
+      y: Number(el.dataset.y),
+      sign: Number(el.dataset.sign),
+      hip: 0,
+      hipV: 0,
+      bend: KNEE_REST,
+      bendV: 0,
+    }));
+    let prevX = rope.handleX;
+    let prevY = rope.handleY;
+    let prevVX = 0;
+    let prevVY = 0;
+    const stepLegs = () => {
+      const vx = rope.handleX - prevX;
+      const vy = rope.handleY - prevY;
+      const ax = vx - prevVX;
+      const ay = vy - prevVY;
+      prevX = rope.handleX;
+      prevY = rope.handleY;
+      prevVX = vx;
+      prevVY = vy;
+      // Into the sheep's own frame: undo its tilt, then its left-right mirroring.
+      const a = (ballAngle * Math.PI) / 180;
+      const side = Math.max(-3, Math.min(3, -(ax * Math.cos(a) + ay * Math.sin(a))));
+      for (const leg of legs) {
+        const hipTarget = Math.max(-12, Math.min(12, ballAngle * 0.25 + side * 6));
+        leg.hipV = (leg.hipV + (hipTarget - leg.hip) * 0.07) * 0.86;
+        leg.hip = Math.max(-16, Math.min(16, leg.hip + leg.hipV));
+        const bendTarget = KNEE_REST + leg.sign * (side * 10 - leg.hipV * 0.6);
+        leg.bendV = (leg.bendV + (bendTarget - leg.bend) * 0.1) * 0.85;
+        leg.bend += leg.bendV;
+        if (leg.bend < 0 || leg.bend > KNEE_MAX) {
+          leg.bend = Math.max(0, Math.min(KNEE_MAX, leg.bend));
+          leg.bendV = 0;
+        }
+      }
+    };
+    const legsMoving = () => legs.some((l) => Math.abs(l.hipV) > 0.02 || Math.abs(l.bendV) > 0.02 || Math.abs(l.hip) > 0.3);
+    const resetLegs = () => {
+      prevX = rope.handleX;
+      prevY = rope.handleY;
+      prevVX = prevVY = 0;
+      for (const leg of legs) {
+        leg.hip = leg.hipV = leg.bendV = 0;
+        leg.bend = KNEE_REST;
+      }
+    };
+    const renderLegs = () => {
+      for (const leg of legs) {
+        leg.el.setAttribute("transform", `translate(${leg.x} ${leg.y}) rotate(${leg.hip.toFixed(2)})`);
+        leg.knee.setAttribute("transform", `translate(0 30) rotate(${(leg.sign * leg.bend).toFixed(2)})`);
+      }
+    };
+
+    // After a while the sheep lifts its head and baas; a thought bubble floats next to its head for 2s.
+    const sheep = ballEl.querySelector<SVGGElement>("[data-sheep]");
+    const bubble = root.querySelector<HTMLElement>("[data-baa]");
+    const placeBubble = () => {
+      if (!bubble) return;
+      // The head sits about 10.6 units ahead of and 2 units below the cord attach in the sheep's frame.
+      const a = (ballAngle * Math.PI) / 180;
+      const k = s.ballRadius / 13;
+      const lx = -10.6 * k;
+      const ly = 1.9 * k;
+      const headX = ballX + lx * Math.cos(a) - ly * Math.sin(a);
+      const headY = ballY + lx * Math.sin(a) + ly * Math.cos(a);
+      bubble.style.left = `${(headX - 16).toFixed(1)}px`;
+      bubble.style.top = `${(headY - 30).toFixed(1)}px`;
+    };
+    const baa = () => {
+      sheep?.toggleAttribute("data-baa", true);
+      placeBubble();
+      bubble?.toggleAttribute("data-show", true);
+      window.setTimeout(() => {
+        sheep?.removeAttribute("data-baa");
+        bubble?.removeAttribute("data-show");
+      }, 2000);
+    };
+    window.setTimeout(baa, 10_000);
+
     const render = () => {
       cord.setAttribute("d", rope.toPath());
       // The ball hangs off the cord end along the last segment, so it pivots around its attach point.
@@ -145,11 +316,16 @@ const ballScale = s.ballRadius / 13;
       const hx = rope.handleX + dirX * reach;
       const hy = rope.handleY + dirY * reach;
       const angle = (Math.atan2(dirX, dirY) * -180) / Math.PI;
+      ballX = hx;
+      ballY = hy;
+      ballAngle = angle;
       ballEl.setAttribute(
         "transform",
         `translate(${hx.toFixed(1)} ${hy.toFixed(1)}) rotate(${angle.toFixed(1)}) scale(${(s.ballRadius / 13).toFixed(3)})`,
       );
       handle.style.transform = `translate(${(hx - 22).toFixed(1)}px, ${(hy - 22).toFixed(1)}px)`;
+      renderLegs();
+      if (bubble?.hasAttribute("data-show")) placeBubble();
 
       // A moving ball is hard to catch, so widen the invisible hit area until it settles.
       const grab = rope.isDragging || rope.energy > 0.05 ? s.swingGrab : 0;
@@ -202,14 +378,16 @@ const ballScale = s.ballRadius / 13;
       autoPull?.(now);
       while (acc >= STEP_MS) {
         rope.step();
+        stepLegs();
         acc -= STEP_MS;
       }
       render();
-      if (rope.isDragging || autoPull || rope.energy > 0.002) {
+      if (rope.isDragging || autoPull || rope.energy > 0.002 || legsMoving()) {
         raf = requestAnimationFrame(frame);
       } else {
         raf = 0;
         rope.reset();
+        resetLegs();
         render();
       }
     };

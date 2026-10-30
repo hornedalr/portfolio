@@ -68,3 +68,17 @@
     }
   }
 }
+
+/* Placeholder sheep: a barely-there idle sway. Knees only ever bend one way. */
+@keyframes leg-sway {
+  0%, 100% { rotate: -2.5deg; }
+  50% { rotate: 2.5deg; }
+}
+@keyframes knee-front {
+  0%, 100% { rotate: 0deg; }
+  50% { rotate: 4deg; }
+}
+@keyframes knee-hind {
+  0%, 100% { rotate: 0deg; }
+  50% { rotate: -4deg; }
+}
