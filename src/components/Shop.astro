@@ -7,12 +7,12 @@ import { lamps, originals } from "../data/shop";
   <div class="mx-auto max-w-5xl px-5">
     <h2 id="shop-heading" class="text-3xl font-bold tracking-wide uppercase">Shop</h2>
 
-    <h3 id="shop-lamps" class="mt-10 text-sm font-semibold tracking-wide text-wool-600 uppercase dark:text-wool-400">Lamps</h3>
+    <h3 id="shop-lamps" class="mt-10 scroll-mt-24 text-sm font-semibold tracking-wide text-wool-600 uppercase dark:text-wool-400">Lamps</h3>
     <ul aria-labelledby="shop-lamps" class="mt-4 grid grid-cols-2 gap-x-4 gap-y-12 sm:gap-x-6 lg:grid-cols-3">
       {lamps.map((product) => <ShopItem product={product} />)}
     </ul>
 
-    <h3 id="shop-originals" class="mt-20 text-sm font-semibold tracking-wide text-wool-600 uppercase dark:text-wool-400">
+    <h3 id="shop-originals" class="mt-20 scroll-mt-24 text-sm font-semibold tracking-wide text-wool-600 uppercase dark:text-wool-400">
       Original works
     </h3>
     <p class="mt-1 text-sm text-wool-600 dark:text-wool-400">One of a kind. Each piece can only be bought once.</p>

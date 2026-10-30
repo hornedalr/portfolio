@@ -1,20 +1,20 @@
 ---
 import { Image } from "astro:assets";
-import type { Project } from "../data/site";
+import { slug, type Project } from "../data/site";
 
 interface Props {
   project: Project;
 }
 
 const { project } = Astro.props;
-const headingId = `project-${project.title.toLowerCase().replace(/[^a-z0-9]+/g, "-")}`;
+const headingId = `project-${slug(project.title)}`;
 // Landscape pictures span both columns; portraits (e.g. 4:5) sit side by side.
 const wide = project.image.width > project.image.height;
 const width = wide ? 1500 : 750;
 const height = Math.round((width * project.image.height) / project.image.width);
 ---
 
-<article aria-labelledby={headingId} class:list={["reveal", wide && "md:col-span-2"]}>
+<article id={`work-${slug(project.title)}`} aria-labelledby={headingId} class:list={["reveal scroll-mt-24", wide && "md:col-span-2"]}>
   <Image
     src={project.image}
     alt={project.alt}

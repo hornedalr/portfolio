@@ -9,7 +9,7 @@ interface Props {
 const { product } = Astro.props;
 ---
 
-<li class="reveal flex flex-col">
+<li id={product.id} class="reveal flex scroll-mt-24 flex-col">
   <Image
     src={product.image}
     alt={product.alt}

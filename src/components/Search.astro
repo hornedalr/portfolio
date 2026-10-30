@@ -1,0 +1,138 @@
+---
+import { searchIndex } from "../data/search";
+
+const iconButton =
+  "inline-flex size-11 flex-none items-center justify-center text-wool-800 hover:bg-wool-100 focus-visible:outline-2 focus-visible:outline-bark-600 dark:text-wool-200 dark:hover:bg-wool-800";
+---
+
+<div
+  id="search"
+  data-search
+  inert
+  role="dialog"
+  aria-modal="true"
+  aria-labelledby="search-heading"
+  class="pointer-events-none fixed inset-0 z-50 flex flex-col bg-wool-50 opacity-0 transition-opacity duration-200 data-[open]:pointer-events-auto data-[open]:opacity-100 dark:bg-wool-950"
+>
+  <div class="mx-auto flex min-h-0 w-full max-w-2xl flex-1 flex-col px-5 pt-3">
+    <h2 id="search-heading" class="sr-only">Search the site</h2>
+    <div class="flex items-center gap-2 border-b-2 border-wool-800 focus-within:border-bark-600 dark:border-wool-200 dark:focus-within:border-bark-300">
+      <svg class="size-6 flex-none text-wool-600 dark:text-wool-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" aria-hidden="true">
+        <circle cx="10.5" cy="10.5" r="6.5"></circle>
+        <path d="m15.5 15.5 5 5"></path>
+      </svg>
+      <input
+        type="search"
+        data-search-input
+        aria-label="Search"
+        aria-controls="search-results"
+        placeholder="Works, lamps, exhibitions…"
+        autocomplete="off"
+        enterkeyhint="go"
+        class="min-h-14 min-w-0 flex-1 bg-transparent text-xl outline-none placeholder:text-wool-500 [&::-webkit-search-cancel-button]:hidden"
+      />
+      <button type="button" data-search-close aria-label="Close search" class={iconButton}>
+        <svg class="size-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" aria-hidden="true">
+          <path d="m6 6 12 12M18 6 6 18"></path>
+        </svg>
+      </button>
+    </div>
+    <p data-search-status aria-live="polite" class="mt-3 text-sm text-wool-600 dark:text-wool-400"></p>
+    <ul id="search-results" data-search-results class="mt-2 min-h-0 flex-1 divide-y divide-wool-200 overflow-y-auto pb-8 dark:divide-wool-800">
+    </ul>
+  </div>
+</div>
+<script type="application/json" data-search-index set:html={JSON.stringify(searchIndex)} />
+
+<script>
+  type Entry = { title: string; kind: string; text: string; keywords?: string; href: string };
+  const index: Entry[] = JSON.parse(document.querySelector("[data-search-index]")!.textContent!);
+  const fold = (s: string) => s.normalize("NFD").replace(/\p{Diacritic}/gu, "").toLowerCase();
+  const titles = index.map((e) => fold(e.title));
+  const haystacks = index.map((e, i) => `${titles[i]} ${fold(e.kind)} ${fold(e.text)} ${fold(e.keywords ?? "")}`);
+
+  const dialog = document.querySelector<HTMLElement>("[data-search]")!;
+  const input = dialog.querySelector<HTMLInputElement>("[data-search-input]")!;
+  const results = dialog.querySelector<HTMLUListElement>("[data-search-results]")!;
+  const status = dialog.querySelector<HTMLElement>("[data-search-status]")!;
+  const opener = document.querySelector<HTMLButtonElement>("[data-search-button]")!;
+
+  const find = (query: string) => {
+    const terms = fold(query).split(/\s+/).filter(Boolean);
+    if (!terms.length) return [];
+    const hits = index.map((_, i) => i).filter((i) => terms.every((t) => haystacks[i].includes(t)));
+    // Best first: the whole query in the title, then every word in the title, then the title starting with the
+    // first word; ties keep page order.
+    const phrase = terms.join(" ");
+    const score = (i: number) =>
+      titles[i] === phrase ? 0 : titles[i].includes(phrase) ? 1 : terms.every((t) => titles[i].includes(t)) ? 2 : titles[i].startsWith(terms[0]) ? 3 : 4;
+    return hits.sort((a, b) => score(a) - score(b) || a - b).map((i) => index[i]);
+  };
+
+  const render = () => {
+    const query = input.value.trim();
+    const hits = find(query);
+    results.replaceChildren(
+      ...hits.map((e) => {
+        const li = document.createElement("li");
+        const a = document.createElement("a");
+        a.href = e.href;
+        a.className = "flex items-baseline justify-between gap-4 py-4 hover:text-bark-700 focus-visible:outline-2 focus-visible:outline-bark-600 dark:hover:text-bark-300";
+        const main = document.createElement("span");
+        main.className = "min-w-0";
+        const title = document.createElement("span");
+        title.className = "block text-lg font-semibold";
+        title.textContent = e.title;
+        const text = document.createElement("span");
+        text.className = "block truncate text-sm text-wool-600 dark:text-wool-400";
+        text.textContent = e.text;
+        main.append(title, text);
+        const kind = document.createElement("span");
+        kind.className = "flex-none text-xs font-semibold tracking-wide text-wool-600 uppercase dark:text-wool-400";
+        kind.textContent = e.kind;
+        a.append(main, kind);
+        li.append(a);
+        return li;
+      }),
+    );
+    status.textContent = !query ? "" : hits.length ? `${hits.length} result${hits.length > 1 ? "s" : ""}` : `Nothing found for “${query}”`;
+  };
+
+  const isOpen = () => dialog.hasAttribute("data-open");
+  const setOpen = (open: boolean) => {
+    dialog.toggleAttribute("data-open", open);
+    dialog.inert = !open;
+    opener.setAttribute("aria-expanded", String(open));
+    document.documentElement.classList.toggle("overflow-hidden", open);
+    if (open) {
+      input.focus();
+      input.select();
+    }
+  };
+
+  opener.addEventListener("click", () => setOpen(true));
+  dialog.querySelector("[data-search-close]")!.addEventListener("click", () => {
+    setOpen(false);
+    opener.focus();
+  });
+  input.addEventListener("input", render);
+  input.addEventListener("keydown", (e) => {
+    if (e.key !== "Enter") return;
+    const first = results.querySelector("a");
+    if (first) {
+      e.preventDefault();
+      first.click();
+    }
+  });
+  // Following a result closes the overlay; the browser then jumps to the item.
+  results.addEventListener("click", (e) => (e.target as Element).closest("a") && setOpen(false));
+  addEventListener("keydown", (e) => {
+    if (e.key === "Escape" && isOpen()) {
+      setOpen(false);
+      opener.focus();
+    } else if (e.key === "/" && !isOpen() && !(e.target as Element).closest("input, textarea, [contenteditable]")) {
+      e.preventDefault();
+      setOpen(true);
+    }
+  });
+</script>

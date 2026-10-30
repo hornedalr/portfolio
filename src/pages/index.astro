@@ -5,6 +5,7 @@ import Hero from "../components/Hero.astro";
 import ProjectCard from "../components/ProjectCard.astro";
 import Shop from "../components/Shop.astro";
 import Cart from "../components/Cart.astro";
+import Search from "../components/Search.astro";
 import Exhibitions from "../components/Exhibitions.astro";
 import { Image } from "astro:assets";
 import { profile, projects } from "../data/site";
@@ -15,6 +16,7 @@ const year = new Date().getFullYear();
 <BaseLayout title={`${profile.name} — ${profile.role}`} description={profile.tagline}>
   <Header />
   <Cart />
+  <Search />
   <main id="main">
     <Hero />
 
