@@ -6,6 +6,12 @@ import skymningCeiling from "../assets/projects/skymning-ceiling.jpg";
 import skymningTable from "../assets/projects/skymning-table.jpg";
 import skymningVarme from "../assets/projects/skymning-varme.jpg";
 import varme from "../assets/projects/varme.jpg";
+import tamedWool2 from "../assets/projects/tamed-wool-2.jpg";
+import naraGrannar2 from "../assets/projects/nara-grannar-2.jpg";
+import goodWool2 from "../assets/projects/good-wool-collective-2.jpg";
+import skymningCeiling2 from "../assets/projects/skymning-ceiling-2.jpg";
+import skymningCeiling3 from "../assets/projects/skymning-ceiling-3.jpg";
+import skymningTable2 from "../assets/projects/skymning-table-2.jpg";
 import portrait from "../assets/portrait.png";
 
 export const profile = {
@@ -28,6 +34,8 @@ export interface Project {
   summary: string;
   image: ImageMetadata;
   alt: string;
+  /** More pictures after the main one, swiped through in the card. They're shown at the main image's aspect ratio. */
+  gallery?: { image: ImageMetadata; alt: string }[];
   /** Small facts shown under the title, e.g. date, duration, dimensions. */
   details: { label: string; value: string }[];
   href?: string;
@@ -39,6 +47,7 @@ export const projects: Project[] = [
     summary:
       "My degree project at Konstfack, and the ROSLAGEN collection. How can Swedish wool take more space in the lighting industry? I shaped wool at a large scale without blending it with polyester-based binders, taming it until the material could start to carry itself.",
     image: tamedWool,
+    gallery: [{ image: tamedWool2, alt: "Close-up of the wall lamp: amber light glowing through layers of wool" }],
     details: [
       { label: "Date", value: "May 2026" },
       { label: "Duration", value: "2 months" },
@@ -51,6 +60,7 @@ export const projects: Project[] = [
     summary:
       "A spatial light object in wool and clay. The wool floats and only comes alive with light; the clay carries and positions the light source. Each material depends on the other. The wool comes from endangered Swedish landrace sheep: Värmland, Hälsinge and Gestrike.",
     image: naraGrannar,
+    gallery: [{ image: naraGrannar2, alt: "Ink sketch of nära Grannar: a loose wool form floating above a tall clay base that holds the light" }],
     details: [
       { label: "Date", value: "January 2026" },
       { label: "Materials", value: "Wool, clay" },
@@ -63,6 +73,7 @@ export const projects: Project[] = [
     summary:
       "Several of my Swedish wool lamps shown at Bergstrand Consultancy during a Good Wool Collective event in Stockholm, in a room of fashion and interior brands gathered to talk about the future of wool beyond fashion and textiles.",
     image: goodWool,
+    gallery: [{ image: goodWool2, alt: "A glowing wool lamp on a windowsill next to folded dark wool blankets" }],
     details: [
       { label: "Date", value: "February 2026" },
       { label: "Place", value: "Bergstrand Consultancy, Stockholm" },
@@ -73,6 +84,10 @@ export const projects: Project[] = [
     title: "Skymning ceiling lamp",
     summary: "Twilight's own shifts in wool. A ceiling lamp in a blend of dark Hälsinge and light Gestrike landrace wool.",
     image: skymningCeiling,
+    gallery: [
+      { image: skymningCeiling2, alt: "Close-up of the Skymning ceiling lamp: dark wool veins over glowing pale wool" },
+      { image: skymningCeiling3, alt: "Detail of Skymning: dark and light wool blending into each other like dusk" },
+    ],
     details: [
       { label: "Date", value: "November 2025" },
       { label: "Dimensions", value: "800 × 550 × 550 mm" },
@@ -85,6 +100,7 @@ export const projects: Project[] = [
     summary:
       "A table lamp in Swedish landrace wool. The black wool with brown tones comes from Hälsinge sheep and the light wool from Gestrike sheep.",
     image: skymningTable,
+    gallery: [{ image: skymningTable2, alt: "The Skymning table lamp from another angle, light pooling on the shelf below it" }],
     details: [
       { label: "Date", value: "November 2025" },
       { label: "Type", value: "Table lamp" },
