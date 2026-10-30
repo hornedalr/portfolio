@@ -18,6 +18,10 @@ export interface CordSettings extends RopePhysics {
   tensionThinning: number;
   /** Extra invisible grab margin (px) around the ball while it is moving. */
   swingGrab: number;
+  /** Page-load swing-in start angle in degrees from hanging (negative = left, 0 = no intro). */
+  introAngle: number;
+  /** Delay (ms) after load before the intro swing starts. */
+  introDelay: number;
 }
 
 export const DEFAULT_SETTINGS: CordSettings = {
@@ -31,6 +35,8 @@ export const DEFAULT_SETTINGS: CordSettings = {
   cordWidth: 2.5,
   tensionThinning: 1.1,
   swingGrab: 28,
+  introAngle: -85,
+  introDelay: 250,
 };
 
 /** Merges untrusted values over defaults, keeping only known numeric keys. */

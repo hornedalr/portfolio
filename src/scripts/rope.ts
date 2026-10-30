@@ -115,13 +115,22 @@ export class Rope {
   }
 
   reset(): void {
+    this.pose(0);
+  }
+
+  /** Lays the cord out straight at `angleDeg` from hanging (negative = left), at rest length and with no motion. */
+  pose(angleDeg: number): void {
+    const a = (Math.max(-170, Math.min(170, angleDeg)) * Math.PI) / 180;
+    const ux = Math.sin(a);
+    const uy = Math.cos(a);
     for (let i = 0; i < this.n; i++) {
-      this.xs[i] = this.pxs[i] = this.o.anchorX;
-      this.ys[i] = this.pys[i] = this.o.anchorY + i * this.baseSeg;
+      this.xs[i] = this.pxs[i] = this.o.anchorX + ux * i * this.baseSeg;
+      this.ys[i] = this.pys[i] = this.o.anchorY + uy * i * this.baseSeg;
     }
     this.segLen = this.baseSeg;
     this.ext = 0;
     this.extV = 0;
+    this.dragging = false;
   }
 
   startDrag(x: number, y: number): void {

@@ -56,6 +56,13 @@ const groups: { title: string; controls: Control[] }[] = [
       { key: "swingGrab", label: "Swing grab margin", min: 0, max: 60, step: 1, hint: "Invisible extra grab area (px) around the ball while it moves. Shown dashed here only." },
     ],
   },
+  {
+    title: "Page-load intro",
+    controls: [
+      { key: "introAngle", label: "Start angle", min: -170, max: 170, step: 1, hint: "Where the ball swings in from, in degrees from hanging. Negative = left, 90 = level, 0 = no intro." },
+      { key: "introDelay", label: "Start delay", min: 0, max: 2000, step: 10, hint: "Wait (ms) after the page loads before the ball drops." },
+    ],
+  },
 ];
 
 const button =
@@ -105,6 +112,7 @@ const button =
         <button type="button" class={button} data-pull="medium">Medium</button>
         <button type="button" class={button} data-pull="max">Max</button>
         <button type="button" class={button} data-pull="swing">Sideways</button>
+        <button type="button" class={button} data-intro>Replay intro</button>
       </div>
 
       <label class="flex items-center gap-3 text-sm">
@@ -275,6 +283,8 @@ const button =
       );
     });
   }
+
+  $<HTMLButtonElement>("[data-intro]").addEventListener("click", () => window.dispatchEvent(new Event("cord:intro")));
 
   // Live readouts and graph.
   const canvas = $<HTMLCanvasElement>("[data-graph]");

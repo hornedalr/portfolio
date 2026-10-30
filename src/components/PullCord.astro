@@ -21,7 +21,7 @@ const ballScale = s.ballRadius / 13;
 <div
   data-pull-cord
   data-debug={debug ? "" : undefined}
-  class:list={["pointer-events-none absolute z-30 h-80 w-24", position]}
+  class:list={["pointer-events-none absolute z-30 h-80 w-24 in-[.cord-intro]:invisible", position]}
 >
   <svg
     class="absolute inset-0 h-full w-full overflow-visible"
@@ -189,7 +189,8 @@ const ballScale = s.ballRadius / 13;
     const wake = () => {
       if (raf) return;
       last = performance.now();
-      acc = 0;
+      // Always run at least one step, so a rope posed at zero velocity isn't mistaken for settled.
+      acc = STEP_MS;
       raf = requestAnimationFrame(frame);
     };
 
@@ -285,7 +286,20 @@ const ballScale = s.ballRadius / 13;
       }
     });
 
+    /** Page-load swing: start the cord raised to the side, then let it fall in. */
+    const playIntro = () => {
+      if (reduceMotion.matches || !s.introAngle || rope.isDragging || autoPull) {
+        html.classList.remove("cord-intro");
+        return;
+      }
+      rope.pose(s.introAngle);
+      render();
+      html.classList.remove("cord-intro");
+      window.setTimeout(wake, s.introDelay / timeScale);
+    };
+
     if (debug) {
+      window.addEventListener("cord:intro", playIntro);
       // Make the otherwise invisible grab area visible while tuning.
       handle.classList.add("before:outline-1", "before:outline-dashed", "before:outline-bark-500");
       window.addEventListener("cord:tune", (e) => {
@@ -326,5 +340,6 @@ const ballScale = s.ballRadius / 13;
     }
 
     syncLabel();
+    playIntro();
   }
 </script>
