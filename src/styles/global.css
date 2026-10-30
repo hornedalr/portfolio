@@ -1,5 +1,8 @@
 @import "tailwindcss";
 
+/* Theme is class-driven so the pull cord can override the OS preference. */
+@custom-variant dark (&:where(.dark, .dark *));
+
 @theme {
   --font-sans: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
   --font-mono: ui-monospace, SFMono-Regular, "Cascadia Code", Menlo, Consolas, monospace;
@@ -30,7 +33,24 @@
 @layer base {
   html {
     scroll-behavior: smooth;
-    color-scheme: light dark;
+    color-scheme: light;
+  }
+
+  html.dark {
+    color-scheme: dark;
+  }
+
+  /* Applied briefly by the pull cord so the theme swap fades instead of flashing. */
+  html.theme-fade,
+  html.theme-fade *,
+  html.theme-fade *::before,
+  html.theme-fade *::after {
+    transition:
+      background-color 400ms ease,
+      border-color 400ms ease,
+      color 400ms ease,
+      fill 400ms ease,
+      stroke 400ms ease !important;
   }
 
   @media (prefers-reduced-motion: reduce) {

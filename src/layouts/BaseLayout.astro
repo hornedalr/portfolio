@@ -21,6 +21,17 @@ const { title, description } = Astro.props;
     <meta property="og:description" content={description} />
     <meta property="og:type" content="website" />
     <title>{title}</title>
+    <script is:inline>
+      (() => {
+        let stored = null;
+        try {
+          stored = localStorage.getItem("theme");
+        } catch {}
+        const dark = stored ? stored === "dark" : matchMedia("(prefers-color-scheme: dark)").matches;
+        document.documentElement.classList.toggle("dark", dark);
+        if (dark) document.querySelector('meta[name="theme-color"]')?.setAttribute("content", "#171514");
+      })();
+    </script>
   </head>
   <body class="bg-wool-50 font-sans text-wool-900 antialiased dark:bg-wool-950 dark:text-wool-100">
     <a
