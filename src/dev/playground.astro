@@ -60,6 +60,7 @@ const groups: { title: string; controls: Control[] }[] = [
     title: "Page-load intro",
     controls: [
       { key: "introAngle", label: "Start angle", min: -170, max: 170, step: 1, hint: "Where the ball swings in from, in degrees from hanging. Negative = left, 90 = level, 0 = no intro." },
+      { key: "introStretch", label: "Start distance", min: -200, max: 220, step: 1, hint: "Ball distance from rest length (px). Positive = starts stretched and snaps back, negative = starts closer with slack cord." },
       { key: "introDelay", label: "Start delay", min: 0, max: 2000, step: 10, hint: "Wait (ms) after the page loads before the ball drops." },
     ],
   },

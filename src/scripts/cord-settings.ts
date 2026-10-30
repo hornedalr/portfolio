@@ -20,6 +20,8 @@ export interface CordSettings extends RopePhysics {
   swingGrab: number;
   /** Page-load swing-in start angle in degrees from hanging (negative = left, 0 = no intro). */
   introAngle: number;
+  /** Page-load start distance relative to rest length (px): positive = stretched out, negative = slack. */
+  introStretch: number;
   /** Delay (ms) after load before the intro swing starts. */
   introDelay: number;
 }
@@ -36,6 +38,7 @@ export const DEFAULT_SETTINGS: CordSettings = {
   tensionThinning: 1.1,
   swingGrab: 28,
   introAngle: -85,
+  introStretch: 0,
   introDelay: 250,
 };
 

@@ -85,6 +85,25 @@ const ballScale = s.ballRadius / 13;
 
     const isDark = () => html.classList.contains("dark");
 
+    // Android supports the Vibration API. iOS Safari doesn't, but toggling a native switch control gives a haptic
+    // tick (iOS 18+), so a hidden one is toggled instead.
+    const haptic = () => {
+      if (typeof navigator.vibrate === "function") {
+        navigator.vibrate(10);
+        return;
+      }
+      const label = document.createElement("label");
+      label.ariaHidden = "true";
+      label.style.display = "none";
+      const input = document.createElement("input");
+      input.type = "checkbox";
+      input.setAttribute("switch", "");
+      label.append(input);
+      document.head.append(label);
+      label.click();
+      label.remove();
+    };
+
     const syncLabel = () => {
       const dark = isDark();
       handle.setAttribute("aria-pressed", String(dark));
@@ -146,7 +165,7 @@ const ballScale = s.ballRadius / 13;
         armed = nowArmed;
         cord.classList.toggle("stroke-bark-600!", armed);
         cord.classList.toggle("dark:stroke-bark-300!", armed);
-        if (armed) navigator.vibrate?.(8);
+        if (armed) haptic();
       }
       if (debug) {
         root.dispatchEvent(
@@ -169,7 +188,15 @@ const ballScale = s.ballRadius / 13;
     let last = 0;
     let acc = 0;
     let autoPull: ((now: number) => void) | null = null;
+    let introHold = 0;
     const frame = (now: number) => {
+      // Keep the intro start pose still until its delay has passed, even if something else woke the loop.
+      if (introHold) {
+        last = now;
+        acc = STEP_MS;
+        raf = requestAnimationFrame(frame);
+        return;
+      }
       acc += Math.min(now - last, 100) * timeScale;
       last = now;
       autoPull?.(now);
@@ -219,6 +246,8 @@ const ballScale = s.ballRadius / 13;
 
     handle.addEventListener("pointerdown", (e) => {
       if (e.button !== 0 || pointerId !== null || autoPull) return;
+      clearTimeout(introHold);
+      introHold = 0;
       pointerId = e.pointerId;
       handle.setPointerCapture(e.pointerId);
       const p = local(e);
@@ -292,10 +321,14 @@ const ballScale = s.ballRadius / 13;
         html.classList.remove("cord-intro");
         return;
       }
-      rope.pose(s.introAngle);
+      rope.pose(s.introAngle, s.introStretch);
       render();
       html.classList.remove("cord-intro");
-      window.setTimeout(wake, s.introDelay / timeScale);
+      clearTimeout(introHold);
+      introHold = window.setTimeout(() => {
+        introHold = 0;
+        wake();
+      }, s.introDelay / timeScale);
     };
 
     if (debug) {

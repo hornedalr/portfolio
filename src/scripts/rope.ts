@@ -111,26 +111,65 @@ export class Rope {
       const vy = this.ys[i] - this.pys[i];
       e += vx * vx + vy * vy;
     }
-    return e + this.ext + Math.abs(this.extV);
+    // Include the handle's offset from rest so a swing paused at its turning point doesn't count as settled.
+    const h = this.n - 1;
+    const ox = this.xs[h] - this.o.anchorX;
+    const oy = this.ys[h] - this.o.anchorY - this.o.restLength;
+    return e + this.ext + Math.abs(this.extV) + 0.002 * (ox * ox + oy * oy);
   }
 
   reset(): void {
     this.pose(0);
   }
 
-  /** Lays the cord out straight at `angleDeg` from hanging (negative = left), at rest length and with no motion. */
-  pose(angleDeg: number): void {
+  /**
+   * Lays the cord out at `angleDeg` from hanging (negative = left) with no motion. `stretch` moves the ball along
+   * that direction: positive draws cord out of the reel (it snaps back when released), negative brings the ball
+   * closer so the slack cord bows downward.
+   */
+  pose(angleDeg: number, stretch = 0): void {
+    const { n, xs, ys, pxs, pys } = this;
+    const h = n - 1;
+    const rest = this.o.restLength;
     const a = (Math.max(-170, Math.min(170, angleDeg)) * Math.PI) / 180;
     const ux = Math.sin(a);
     const uy = Math.cos(a);
-    for (let i = 0; i < this.n; i++) {
-      this.xs[i] = this.pxs[i] = this.o.anchorX + ux * i * this.baseSeg;
-      this.ys[i] = this.pys[i] = this.o.anchorY + uy * i * this.baseSeg;
-    }
-    this.segLen = this.baseSeg;
-    this.ext = 0;
+    this.ext = Math.max(0, Math.min(stretch, this.p.maxStretch));
     this.extV = 0;
+    this.segLen = this.baseSeg + this.ext / h;
     this.dragging = false;
+
+    const chord = Math.max(rest + Math.min(stretch, 0), rest * 0.05) + this.ext;
+    // Bow slack cord sideways from the chord, toward the downward side, sized so its length matches the cord.
+    const side = ux >= 0 ? 1 : -1;
+    const px = -uy * side;
+    const py = ux * side;
+    const length = (bow: number) => {
+      let len = 0;
+      for (let i = 1; i <= h; i++) {
+        const dt = chord / h;
+        const db = bow * (Math.sin((Math.PI * i) / h) - Math.sin((Math.PI * (i - 1)) / h));
+        len += Math.hypot(dt, db);
+      }
+      return len;
+    };
+    let lo = 0;
+    let hi = rest;
+    if (chord < rest + this.ext - 0.5) {
+      for (let k = 0; k < 30; k++) {
+        const mid = (lo + hi) / 2;
+        if (length(mid) < rest + this.ext) lo = mid;
+        else hi = mid;
+      }
+    } else {
+      hi = 0;
+    }
+    for (let i = 0; i < n; i++) {
+      const t = i / h;
+      const bow = hi * Math.sin(Math.PI * t);
+      xs[i] = pxs[i] = this.o.anchorX + ux * chord * t + px * bow;
+      ys[i] = pys[i] = this.o.anchorY + uy * chord * t + py * bow;
+    }
   }
 
   startDrag(x: number, y: number): void {
