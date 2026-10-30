@@ -1,0 +1,51 @@
+---
+import { Image } from "astro:assets";
+import type { Project } from "../data/site";
+
+interface Props {
+  project: Project;
+}
+
+const { project } = Astro.props;
+const headingId = `project-${project.title.toLowerCase().replace(/[^a-z0-9]+/g, "-")}`;
+---
+
+<article
+  aria-labelledby={headingId}
+  class="group overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm transition hover:shadow-md dark:border-slate-800 dark:bg-slate-900"
+>
+  <Image
+    src={project.image}
+    alt={project.alt}
+    width={600}
+    height={375}
+    widths={[400, 600, 1200]}
+    sizes="(min-width: 768px) 470px, 100vw"
+    loading="lazy"
+    decoding="async"
+    class="aspect-[16/10] w-full object-cover"
+  />
+  <div class="p-5">
+    <h3 id={headingId} class="text-lg font-bold">
+      {
+        project.href ? (
+          <a href={project.href} class="hover:underline focus-visible:outline-2 focus-visible:outline-teal-600">
+            {project.title}
+          </a>
+        ) : (
+          project.title
+        )
+      }
+    </h3>
+    <p class="mt-2 text-slate-600 dark:text-slate-400">{project.summary}</p>
+    <ul class="mt-4 flex flex-wrap gap-2" aria-label="Technologies">
+      {
+        project.tags.map((tag) => (
+          <li class="rounded-full bg-teal-50 px-3 py-1 text-xs font-medium text-teal-800 dark:bg-teal-950 dark:text-teal-300">
+            {tag}
+          </li>
+        ))
+      }
+    </ul>
+  </div>
+</article>
