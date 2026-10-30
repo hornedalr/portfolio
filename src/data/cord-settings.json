@@ -1,17 +1,18 @@
 {
   "restLength": 130,
   "points": 14,
-  "maxStretch": 110,
+  "maxStretch": 220,
   "trigger": 50,
   "gravity": 0.6,
   "damping": 0.951,
   "iterations": 16,
   "maxSpeed": 24,
-  "handleWeight": 2.5,
-  "reelStiffness": 0.08,
+  "handleWeight": 5.9,
+  "reelStiffness": 0.14,
   "tapTug": 2.5,
   "hoverNudge": 1.5,
   "ballRadius": 13,
   "cordWidth": 2.5,
-  "tensionThinning": 1.1
+  "tensionThinning": 1.1,
+  "swingGrab": 28
 }
