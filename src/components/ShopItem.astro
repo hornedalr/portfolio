@@ -1,0 +1,52 @@
+---
+import { Image } from "astro:assets";
+import { formatPrice, type Product } from "../data/shop";
+
+interface Props {
+  product: Product;
+}
+
+const { product } = Astro.props;
+---
+
+<li class="reveal flex flex-col">
+  <Image
+    src={product.image}
+    alt={product.alt}
+    width={320}
+    height={400}
+    widths={[240, 320, 640]}
+    sizes="(min-width: 1024px) 312px, 50vw"
+    loading="lazy"
+    decoding="async"
+    class:list={["h-auto w-full", product.sold && "opacity-60"]}
+  />
+  <h4 class="mt-3 text-sm font-semibold tracking-wide uppercase">{product.title}</h4>
+  <p class="mt-0.5 text-xs text-wool-600 dark:text-wool-400">{product.detail}</p>
+  <p class="mt-1 mb-3 text-sm tabular-nums">
+    {product.sold ? <s class="text-wool-600 dark:text-wool-400">{formatPrice(product.price)}</s> : formatPrice(product.price)}
+  </p>
+  {
+    product.sold ? (
+      <p class="mt-auto inline-flex min-h-11 items-center justify-center border border-wool-300 px-3 text-sm font-medium text-wool-600 dark:border-wool-700 dark:text-wool-400">
+        Sold
+      </p>
+    ) : (
+      <button
+        type="button"
+        data-add-to-cart={product.id}
+        class="group mt-auto min-h-11 border border-wool-800 px-3 text-sm font-medium transition-colors hover:bg-wool-900 hover:text-wool-50 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-bark-600 disabled:cursor-default disabled:border-wool-300 disabled:text-wool-600 disabled:hover:bg-transparent data-[added]:border-bark-700 data-[added]:bg-bark-700 data-[added]:text-white dark:border-wool-300 dark:hover:bg-wool-100 dark:hover:text-wool-950 dark:disabled:border-wool-700 dark:disabled:text-wool-400 dark:disabled:hover:bg-transparent"
+      >
+        <span class="group-data-[added]:hidden group-data-[in-cart]:hidden">
+          Add<span class="sr-only"> {product.title}</span> to cart
+        </span>
+        <span class="hidden group-data-[added]:inline" aria-hidden="true">
+          Added
+        </span>
+        <span class="hidden group-data-[in-cart]:inline">
+          In cart<span class="sr-only">: {product.title}</span>
+        </span>
+      </button>
+    )
+  }
+</li>

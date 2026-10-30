@@ -1,7 +1,7 @@
 ---
 import { formatPrice, products } from "../data/shop";
 
-const catalogue = Object.fromEntries(products.map((p) => [p.id, { title: p.title, price: p.price }]));
+const catalogue = Object.fromEntries(products.map((p) => [p.id, { title: p.title, price: p.price, original: !!p.original }]));
 const iconButton =
   "inline-flex size-11 items-center justify-center text-wool-800 hover:bg-wool-100 focus-visible:outline-2 focus-visible:outline-bark-600 dark:text-wool-200 dark:hover:bg-wool-800";
 ---
@@ -50,7 +50,7 @@ const iconButton =
 <script type="application/json" data-catalogue set:html={JSON.stringify(catalogue)} />
 
 <script>
-  type Catalogue = Record<string, { title: string; price: number }>;
+  type Catalogue = Record<string, { title: string; price: number; original: boolean }>;
   const catalogue: Catalogue = JSON.parse(document.querySelector("[data-catalogue]")!.textContent!);
   const format = (kr: number) => `${new Intl.NumberFormat("sv-SE").format(kr)} kr`;
 
@@ -99,18 +99,39 @@ const iconButton =
         const info = el("div", "min-w-0 flex-1");
         info.append(el("p", "text-sm font-semibold tracking-wide uppercase", title), el("p", "text-xs text-wool-600 tabular-nums dark:text-wool-400", format(price * cart[id])));
         const qty = el("div", "flex items-center gap-2 text-sm tabular-nums");
-        qty.append(qtyButton(id, -1, `One fewer ${title}`), el("span", "w-5 text-center", String(cart[id])), qtyButton(id, 1, `One more ${title}`));
+        if (catalogue[id].original) {
+          const remove = el("button", "min-h-8 px-2 text-xs underline underline-offset-4 hover:text-bark-700 focus-visible:outline-2 focus-visible:outline-bark-600 dark:hover:text-bark-300", "Remove");
+          remove.type = "button";
+          remove.dataset.qty = `${id}:-1`;
+          remove.setAttribute("aria-label", `Remove ${title}`);
+          info.append(el("p", "text-xs text-wool-600 dark:text-wool-400", "Original, one of a kind"));
+          qty.append(remove);
+        } else {
+          qty.append(qtyButton(id, -1, `One fewer ${title}`), el("span", "w-5 text-center", String(cart[id])), qtyButton(id, 1, `One more ${title}`));
+        }
         li.append(info, qty);
         return li;
       }),
     );
   };
 
+  // Originals sit in the cart at most once; their shop buttons switch to "In cart".
+  const syncButtons = () => {
+    for (const b of document.querySelectorAll<HTMLButtonElement>("[data-add-to-cart]")) {
+      const id = b.dataset.addToCart!;
+      if (!catalogue[id]?.original || b.hasAttribute("data-added")) continue;
+      b.disabled = !!cart[id];
+      b.toggleAttribute("data-in-cart", !!cart[id]);
+    }
+  };
+
   const setQty = (id: string, qty: number) => {
+    if (catalogue[id]?.original) qty = Math.min(qty, 1);
     if (qty > 0) cart[id] = qty;
     else delete cart[id];
     localStorage.setItem(KEY, JSON.stringify(cart));
     render();
+    syncButtons();
   };
 
   const setOpen = (open: boolean) => {
@@ -137,12 +158,16 @@ const iconButton =
   document.addEventListener("click", (e) => {
     const b = (e.target as Element).closest<HTMLButtonElement>("[data-add-to-cart]");
     const id = b?.dataset.addToCart;
-    if (!b || !id || !catalogue[id]) return;
+    if (!b || !id || !catalogue[id] || (catalogue[id].original && cart[id])) return;
+    b.setAttribute("data-added", "");
     setQty(id, (cart[id] ?? 0) + 1);
     status.textContent = `Added ${catalogue[id].title} to cart`;
-    b.setAttribute("data-added", "");
-    setTimeout(() => b.removeAttribute("data-added"), 1200);
+    setTimeout(() => {
+      b.removeAttribute("data-added");
+      syncButtons();
+    }, 1200);
   });
 
   render();
+  syncButtons();
 </script>

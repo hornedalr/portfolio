@@ -1,42 +1,23 @@
 ---
-import { Image } from "astro:assets";
-import { formatPrice, products } from "../data/shop";
+import ShopItem from "./ShopItem.astro";
+import { lamps, originals } from "../data/shop";
 ---
 
 <section id="shop" aria-labelledby="shop-heading" class="scroll-mt-16 py-16 sm:py-24">
   <div class="mx-auto max-w-5xl px-5">
     <h2 id="shop-heading" class="text-3xl font-bold tracking-wide uppercase">Shop</h2>
-    <ul class="mt-10 grid grid-cols-2 gap-x-4 gap-y-12 sm:gap-x-6 lg:grid-cols-3">
-      {
-        products.map((product) => (
-          <li class="reveal flex flex-col">
-            <Image
-              src={product.image}
-              alt={product.alt}
-              width={320}
-              height={400}
-              widths={[240, 320, 640]}
-              sizes="(min-width: 1024px) 312px, (min-width: 640px) 50vw, 50vw"
-              loading="lazy"
-              decoding="async"
-              class="h-auto w-full"
-            />
-            <h3 class="mt-3 text-sm font-semibold tracking-wide uppercase">{product.title}</h3>
-            <p class="mt-0.5 text-xs text-wool-600 dark:text-wool-400">{product.detail}</p>
-            <p class="mt-1 text-sm tabular-nums">{formatPrice(product.price)}</p>
-            <button
-              type="button"
-              data-add-to-cart={product.id}
-              class="group mt-auto min-h-11 border border-wool-800 px-3 text-sm font-medium transition-colors hover:bg-wool-900 hover:text-wool-50 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-bark-600 data-[added]:border-bark-700 data-[added]:bg-bark-700 data-[added]:text-white dark:border-wool-300 dark:hover:bg-wool-100 dark:hover:text-wool-950"
-            >
-              <span class="group-data-[added]:hidden">
-                Add<span class="sr-only"> {product.title}</span> to cart
-              </span>
-              <span class="hidden group-data-[added]:inline" aria-hidden="true">Added</span>
-            </button>
-          </li>
-        ))
-      }
+
+    <h3 id="shop-lamps" class="mt-10 text-sm font-semibold tracking-wide text-wool-600 uppercase dark:text-wool-400">Lamps</h3>
+    <ul aria-labelledby="shop-lamps" class="mt-4 grid grid-cols-2 gap-x-4 gap-y-12 sm:gap-x-6 lg:grid-cols-3">
+      {lamps.map((product) => <ShopItem product={product} />)}
+    </ul>
+
+    <h3 id="shop-originals" class="mt-20 text-sm font-semibold tracking-wide text-wool-600 uppercase dark:text-wool-400">
+      Original works
+    </h3>
+    <p class="mt-1 text-sm text-wool-600 dark:text-wool-400">One of a kind. Each piece can only be bought once.</p>
+    <ul aria-labelledby="shop-originals" class="mt-4 grid grid-cols-2 gap-x-4 gap-y-12 sm:gap-x-6 lg:grid-cols-3">
+      {originals.map((product) => <ShopItem product={product} />)}
     </ul>
   </div>
 </section>

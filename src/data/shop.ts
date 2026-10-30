@@ -1,11 +1,14 @@
 // Shop catalogue. Prices are in Swedish kronor. Checkout is not connected yet.
 import type { ImageMetadata } from "astro";
-import merinoThrow from "../assets/shop/merino-throw.png";
-import feltedStones from "../assets/shop/felted-stones.png";
-import handspunYarn from "../assets/shop/handspun-yarn.png";
-import wallHanging from "../assets/shop/wall-hanging.png";
-import woolCushion from "../assets/shop/wool-cushion.png";
-import sheepPostcards from "../assets/shop/sheep-postcards.png";
+import lamp1 from "../assets/shop/lamp-1.png";
+import lamp2 from "../assets/shop/lamp-2.png";
+import lamp3 from "../assets/shop/lamp-3.png";
+import lamp4 from "../assets/shop/lamp-4.png";
+import lamp5 from "../assets/shop/lamp-5.png";
+import lamp6 from "../assets/shop/lamp-6.png";
+import original1 from "../assets/shop/original-1.png";
+import original2 from "../assets/shop/original-2.png";
+import original3 from "../assets/shop/original-3.png";
 
 export interface Product {
   id: string;
@@ -15,15 +18,26 @@ export interface Product {
   detail: string;
   image: ImageMetadata;
   alt: string;
+  /** One-of-a-kind pieces can only be bought once. */
+  original?: boolean;
+  sold?: boolean;
 }
 
-export const products: Product[] = [
-  { id: "merino-throw", title: "Merino throw", price: 2400, detail: "130 × 170 cm", image: merinoThrow, alt: "Striped cream and pale brown wool throw" },
-  { id: "felted-stones", title: "Felted stones, set of 3", price: 450, detail: "Grey, brown, ecru", image: feltedStones, alt: "Three felted wool stones in grey, brown and ecru" },
-  { id: "handspun-yarn", title: "Hand-spun yarn", price: 290, detail: "100 g skein", image: handspunYarn, alt: "Loops of cream yarn with a brown strand" },
-  { id: "wall-hanging", title: "Wall hanging No. 4", price: 3800, detail: "60 × 90 cm", image: wallHanging, alt: "Woven wall hanging with brown and cream bands and fringe" },
-  { id: "wool-cushion", title: "Wool cushion", price: 890, detail: "45 × 45 cm", image: woolCushion, alt: "Square pale brown cushion with a darker border" },
-  { id: "sheep-postcards", title: "Sheep postcards", price: 120, detail: "Set of 3", image: sheepPostcards, alt: "Three stacked postcards with a drawn sheep" },
+export const lamps: Product[] = [
+  { id: "lamp-1", title: "Lamp 1", price: 2400, detail: "Felted dome pendant · Ø 45 cm", image: lamp1, alt: "Ecru felted dome pendant lamp glowing warmly" },
+  { id: "lamp-2", title: "Lamp 2", price: 1900, detail: "Striped wool drum pendant · Ø 30 cm", image: lamp2, alt: "Pale brown drum pendant lamp with darker stripes" },
+  { id: "lamp-3", title: "Lamp 3", price: 2100, detail: "Grey felt cone pendant · Ø 50 cm", image: lamp3, alt: "Grey cone-shaped felt pendant lamp" },
+  { id: "lamp-4", title: "Lamp 4", price: 3200, detail: "Wool bobble globe · Ø 42 cm", image: lamp4, alt: "Round ecru globe lamp covered in small felted bobbles" },
+  { id: "lamp-5", title: "Lamp 5", price: 2800, detail: "Bell pendant, brown trim · Ø 44 cm", image: lamp5, alt: "Bell-shaped pale brown pendant lamp with a dark brown rim" },
+  { id: "lamp-6", title: "Lamp 6", price: 3600, detail: "Floor lamp, felted shade · 160 cm", image: lamp6, alt: "Floor lamp with an ecru felted shade on a dark stand" },
 ];
+
+export const originals: Product[] = [
+  { id: "original-1", title: "Original 1", price: 12000, detail: "Wool on linen · 60 × 80 cm", image: original1, alt: "Framed wool piece with a brown circle on ecru", original: true },
+  { id: "original-2", title: "Original 2", price: 9500, detail: "Woven wool · 50 × 75 cm", image: original2, alt: "Woven piece with horizontal bands of cream, grey and brown", original: true },
+  { id: "original-3", title: "Original 3", price: 14500, detail: "Needle-felted wool · 70 × 90 cm", image: original3, alt: "Felted landscape with grey hills and a pale brown sun", original: true, sold: true },
+];
+
+export const products = [...lamps, ...originals];
 
 export const formatPrice = (kr: number) => `${new Intl.NumberFormat("sv-SE").format(kr)} kr`;
