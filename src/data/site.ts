@@ -17,10 +17,7 @@ export const profile = {
   portrait,
   portraitAlt: "Portrait of Lara Braun",
   email: "hello@alexmorgan.dev",
-  socials: [
-    { label: "GitHub", href: "https://github.com/" },
-    { label: "LinkedIn", href: "https://www.linkedin.com/" },
-  ],
+  instagram: { handle: "larabraun", href: "https://www.instagram.com/larabraun/" },
 };
 
 export interface Project {
