@@ -1,5 +1,8 @@
 @import "tailwindcss";
 
+/* Dev-only tooling lives here and must never add classes to the site's CSS. */
+@source not "../../integrations";
+
 /* Theme is class-driven so the pull cord can override the OS preference. */
 @custom-variant dark (&:where(.dark, .dark *));
 
