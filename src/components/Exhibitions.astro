@@ -1,0 +1,41 @@
+---
+import { exhibitionId, exhibitions, formatDates } from "../data/exhibitions";
+
+// Past exhibitions are struck through at build time; the script below keeps that right between deploys.
+const today = new Date().toISOString().slice(0, 10);
+---
+
+<section id="exhibitions" aria-labelledby="exhibitions-heading" class="scroll-mt-16 py-16 sm:py-24">
+  <div class="mx-auto max-w-5xl px-5">
+    <h2 id="exhibitions-heading" class="text-3xl font-bold tracking-wide uppercase">Exhibitions</h2>
+    <ul class="mt-10 divide-y divide-wool-200 border-y border-wool-200 dark:divide-wool-800 dark:border-wool-800">
+      {
+        exhibitions.map((x) => (
+          <li
+            id={exhibitionId(x)}
+            data-ends={x.end}
+            data-past={x.end < today ? "" : undefined}
+            class="group scroll-mt-24 py-5 data-[past]:text-wool-600 dark:data-[past]:text-wool-400"
+          >
+            <a
+              href={x.href}
+              rel="noopener"
+              class="text-lg font-semibold underline-offset-4 group-data-[past]:line-through hover:underline focus-visible:outline-2 focus-visible:outline-bark-600"
+            >
+              {x.title}
+              <span class="sr-only hidden group-data-[past]:inline">, ended</span>
+            </a>
+            <p class="mt-1 text-sm text-wool-600 group-data-[past]:line-through dark:text-wool-400">
+              {x.venue} · <span class="tabular-nums">{formatDates(x)}</span>
+            </p>
+          </li>
+        ))
+      }
+    </ul>
+  </div>
+</section>
+
+<script>
+  const today = new Date().toISOString().slice(0, 10);
+  for (const li of document.querySelectorAll<HTMLElement>("[data-ends]")) li.toggleAttribute("data-past", li.dataset.ends! < today);
+</script>

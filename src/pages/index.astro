@@ -5,6 +5,7 @@ import Hero from "../components/Hero.astro";
 import ProjectCard from "../components/ProjectCard.astro";
 import Shop from "../components/Shop.astro";
 import Cart from "../components/Cart.astro";
+import Exhibitions from "../components/Exhibitions.astro";
 import { Image } from "astro:assets";
 import { profile, projects } from "../data/site";
 
@@ -26,6 +27,8 @@ const year = new Date().getFullYear();
         </div>
       </div>
     </section>
+
+    <Exhibitions />
 
     <Shop />
 

@@ -76,3 +76,6 @@ export const projects: Project[] = [
     alt: "Charcoal background with a grid of cream and grey squares, one in brown",
   },
 ];
+
+/** URL-safe id fragment, e.g. "Orbit Dashboard" -> "orbit-dashboard". */
+export const slug = (text: string) => text.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
