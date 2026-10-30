@@ -2,9 +2,9 @@
   "restLength": 108,
   "points": 14,
   "maxStretch": 170,
-  "trigger": 50,
+  "trigger": 70,
   "heldTension": 0.86,
-  "tautEase": 50,
+  "tautEase": 70,
   "gravity": 0.45,
   "damping": 0.967,
   "iterations": 30,
@@ -17,6 +17,7 @@
   "cordWidth": 2.8,
   "tensionThinning": 1.9,
   "swingGrab": 27,
-  "introAngle": -85,
+  "introAngle": -130,
+  "introStretch": 0,
   "introDelay": 250
 }
