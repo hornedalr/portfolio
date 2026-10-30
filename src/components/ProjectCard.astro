@@ -10,7 +10,7 @@ const { project } = Astro.props;
 const headingId = `project-${project.title.toLowerCase().replace(/[^a-z0-9]+/g, "-")}`;
 // Landscape pictures span both columns; portraits (e.g. 4:5) sit side by side.
 const wide = project.image.width > project.image.height;
-const width = wide ? 1000 : 500;
+const width = wide ? 1500 : 750;
 const height = Math.round((width * project.image.height) / project.image.width);
 ---
 
@@ -20,8 +20,8 @@ const height = Math.round((width * project.image.height) / project.image.width);
     alt={project.alt}
     width={width}
     height={height}
-    widths={wide ? [600, 1000, 2000] : [400, 500, 1000]}
-    sizes={wide ? "(min-width: 1024px) 984px, 100vw" : "(min-width: 1024px) 480px, (min-width: 768px) 50vw, 100vw"}
+    widths={wide ? [800, 1200, 1600] : [400, 750, 1080]}
+    sizes={wide ? "(min-width: 1696px) 1504px, 100vw" : "(min-width: 1696px) 728px, (min-width: 768px) 50vw, 100vw"}
     loading="lazy"
     decoding="async"
     class="h-auto w-full"

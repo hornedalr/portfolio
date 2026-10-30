@@ -18,10 +18,10 @@ const year = new Date().getFullYear();
     <Hero />
 
     <section id="work" aria-labelledby="work-heading" class="scroll-mt-16 bg-wool-100 py-16 sm:py-24 dark:bg-wool-900/50">
-      <div class="mx-auto max-w-5xl px-5">
+      <div class="mx-auto max-w-[100rem] px-5 lg:px-12">
         <h2 id="work-heading" class="text-3xl font-bold tracking-wide uppercase">Selected works</h2>
         <p class="mt-2 text-wool-600 dark:text-wool-400">A few projects I've designed and built recently.</p>
-        <div class="mt-10 grid gap-x-6 gap-y-12 md:grid-cols-2">
+        <div class="mt-10 grid gap-x-6 gap-y-12 md:grid-cols-2 lg:gap-x-12 lg:gap-y-20">
           {projects.map((project) => <ProjectCard project={project} />)}
         </div>
       </div>
