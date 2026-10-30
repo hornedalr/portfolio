@@ -57,6 +57,6 @@ export const projects: Project[] = [
     summary: "An open-source design token toolkit that exports themes to CSS, iOS and Android from a single source.",
     tags: ["Design Systems", "Node.js", "CLI"],
     image: pixelkit,
-    alt: "Charcoal background with a grid of cream and grey rounded squares, one in brown",
+    alt: "Charcoal background with a grid of cream and grey squares, one in brown",
   },
 ];
