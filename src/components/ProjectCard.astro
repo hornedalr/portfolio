@@ -15,7 +15,7 @@ const height = Math.round((width * project.image.height) / project.image.width);
 const slides = [{ image: project.image, alt: project.alt }, ...(project.gallery ?? [])];
 const multiple = slides.length > 1;
 const arrow =
-  "absolute top-1/2 hidden size-10 -translate-y-1/2 items-center justify-center bg-wool-50/85 text-wool-900 opacity-0 transition-opacity duration-200 group-hover/gallery:opacity-100 focus-visible:opacity-100 focus-visible:outline-2 focus-visible:outline-bark-600 disabled:pointer-events-none disabled:invisible pointer-fine:flex dark:bg-wool-950/85 dark:text-wool-100";
+  "absolute top-1/2 hidden size-10 -translate-y-1/2 items-center justify-center text-white opacity-0 drop-shadow-[0_0_3px_rgb(0_0_0/0.55)] transition-opacity duration-200 group-hover/gallery:opacity-100 focus-visible:opacity-100 focus-visible:outline-2 focus-visible:outline-bark-600 disabled:pointer-events-none disabled:invisible pointer-fine:flex";
 ---
 
 <article id={`work-${slug(project.title)}`} aria-labelledby={headingId} class:list={["reveal scroll-mt-24", wide && "md:col-span-2"]}>
@@ -67,12 +67,12 @@ const arrow =
             ))}
           </div>
           <button type="button" data-gallery-prev disabled aria-label="Previous picture" class:list={[arrow, "left-3"]}>
-            <svg class="size-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" aria-hidden="true">
+            <svg class="size-7" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true">
               <path d="M15 5l-7 7 7 7" />
             </svg>
           </button>
           <button type="button" data-gallery-next aria-label="Next picture" class:list={[arrow, "right-3"]}>
-            <svg class="size-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" aria-hidden="true">
+            <svg class="size-7" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true">
               <path d="M9 5l7 7-7 7" />
             </svg>
           </button>
