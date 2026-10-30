@@ -7,6 +7,7 @@ import Shop from "../components/Shop.astro";
 import Cart from "../components/Cart.astro";
 import Search from "../components/Search.astro";
 import Exhibitions from "../components/Exhibitions.astro";
+import ContactForm from "../components/ContactForm.astro";
 import { Image } from "astro:assets";
 import { profile, projects } from "../data/site";
 
@@ -58,12 +59,13 @@ const year = new Date().getFullYear();
         <p class="font-script text-5xl sm:text-6xl">{profile.name}</p>
         <ul class="mt-6 flex flex-col items-center gap-1">
           <li>
-            <a
-              href={`mailto:${profile.email}`}
-              class="inline-flex min-h-11 items-center px-3 underline-offset-4 hover:underline focus-visible:outline-2 focus-visible:outline-bark-600"
+            <button
+              type="button"
+              popovertarget="contact-form"
+              class="inline-flex min-h-11 cursor-pointer items-center px-3 underline-offset-4 hover:underline focus-visible:outline-2 focus-visible:outline-bark-600"
             >
               {profile.email}
-            </a>
+            </button>
           </li>
           <li>
             <a
@@ -82,6 +84,7 @@ const year = new Date().getFullYear();
         </ul>
       </div>
     </section>
+    <ContactForm />
   </main>
 
   <footer class="py-8 text-center text-sm text-wool-600 dark:text-wool-400">

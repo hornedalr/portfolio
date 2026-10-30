@@ -1,0 +1,64 @@
+---
+import { profile } from "../data/site";
+
+// Opened by any button with popovertarget="contact-form": the native Popover API, so no JavaScript is needed.
+// Netlify Forms picks up the form at deploy time (data-netlify) and stores the messages it receives.
+const label = "block text-xs font-semibold tracking-wide text-wool-700 uppercase dark:text-wool-300";
+const field =
+  "mt-1.5 block w-full border border-wool-300 bg-white px-3 py-2.5 text-base text-wool-900 outline-none focus:border-bark-600 dark:border-wool-700 dark:bg-wool-900 dark:text-wool-100 dark:focus:border-bark-300";
+---
+
+<div
+  id="contact-form"
+  popover
+  role="dialog"
+  aria-labelledby="contact-form-heading"
+  class="fixed inset-0 m-0 h-dvh max-h-none w-full max-w-none overflow-y-auto border-0 bg-wool-50 p-0 text-wool-900 backdrop:bg-wool-950/60 sm:m-auto sm:h-fit sm:max-h-[90dvh] sm:max-w-lg sm:border sm:border-wool-300 dark:bg-wool-950 dark:text-wool-100 dark:sm:border-wool-700"
+>
+  <div class="flex items-center justify-between border-b border-wool-200 py-2 pr-2 pl-5 dark:border-wool-800">
+    <h2 id="contact-form-heading" class="text-sm font-semibold tracking-wide uppercase">Send me a message</h2>
+    <button
+      type="button"
+      popovertarget="contact-form"
+      popovertargetaction="hide"
+      aria-label="Close"
+      class="inline-flex size-11 items-center justify-center text-wool-800 hover:bg-wool-100 focus-visible:outline-2 focus-visible:outline-bark-600 dark:text-wool-200 dark:hover:bg-wool-800"
+    >
+      <svg class="size-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" aria-hidden="true">
+        <path d="M6 6l12 12M18 6L6 18"></path>
+      </svg>
+    </button>
+  </div>
+
+  <form name="contact" method="POST" action="/thanks/" data-netlify="true" netlify-honeypot="bot-field" class="space-y-5 px-5 py-6">
+    <input type="hidden" name="form-name" value="contact" />
+    <p class="hidden">
+      <label>Leave this empty <input name="bot-field" tabindex="-1" autocomplete="off" /></label>
+    </p>
+    <div>
+      <label for="cf-name" class={label}>Name</label>
+      <input id="cf-name" name="name" required autocomplete="name" class={field} />
+    </div>
+    <div>
+      <label for="cf-email" class={label}>Email</label>
+      <input id="cf-email" name="email" type="email" required autocomplete="email" class={field} />
+    </div>
+    <div>
+      <label for="cf-title" class={label}>Title</label>
+      <input id="cf-title" name="title" required class={field} />
+    </div>
+    <div>
+      <label for="cf-message" class={label}>Message</label>
+      <textarea id="cf-message" name="message" rows="6" required class:list={[field, "resize-y"]}></textarea>
+    </div>
+    <button
+      type="submit"
+      class="min-h-12 w-full bg-bark-700 px-4 text-sm font-semibold tracking-wide text-white uppercase hover:bg-bark-800 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-bark-600"
+    >
+      Send
+    </button>
+    <p class="text-center text-sm text-wool-600 dark:text-wool-400">
+      Or write to <a href={`mailto:${profile.email}`} class="underline underline-offset-4">{profile.email}</a>
+    </p>
+  </form>
+</div>

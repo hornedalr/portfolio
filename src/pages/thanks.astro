@@ -1,0 +1,18 @@
+---
+import BaseLayout from "../layouts/BaseLayout.astro";
+import { profile } from "../data/site";
+---
+
+<BaseLayout title={`Message sent — ${profile.name}`} description="Thank you for your message.">
+  <main id="main" class="flex min-h-svh flex-col items-center justify-center px-5 text-center">
+    <p class="font-script text-5xl sm:text-6xl">{profile.name}</p>
+    <h1 class="mt-6 text-sm font-semibold tracking-wide uppercase">Thank you</h1>
+    <p class="mt-2 text-wool-600 dark:text-wool-400">Your message has been sent. I'll get back to you soon.</p>
+    <a
+      href="/#contact"
+      class="mt-8 inline-flex min-h-11 items-center border border-wool-800 px-5 text-sm font-medium hover:bg-wool-900 hover:text-wool-50 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-bark-600 dark:border-wool-300 dark:hover:bg-wool-100 dark:hover:text-wool-950"
+    >
+      Back to the site
+    </a>
+  </main>
+</BaseLayout>
