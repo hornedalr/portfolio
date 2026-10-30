@@ -2,30 +2,110 @@
 import { profile } from "../data/site";
 
 const links = [
-  { href: "#work", label: "Work", desktopOnly: true },
-  { href: "#about", label: "About", desktopOnly: true },
-  { href: "#contact", label: "Contact", desktopOnly: false },
+  { href: "#work", label: "Works" },
+  { href: "#exhibitions", label: "Exhibitions" },
+  { href: "#shop", label: "Shop" },
+  { href: "#about", label: "About" },
+  { href: "#contact", label: "Contact" },
 ];
+const iconButton =
+  "inline-flex size-11 items-center justify-center text-wool-800 hover:bg-wool-100 focus-visible:outline-2 focus-visible:outline-bark-600 dark:text-wool-200 dark:hover:bg-wool-800";
 ---
 
 <header
-  class="sticky top-0 z-40 border-b border-wool-200/70 bg-wool-50/85 backdrop-blur dark:border-wool-800/70 dark:bg-wool-950/85"
+  data-site-header
+  class="sticky top-0 z-40 border-b border-wool-200/70 bg-wool-50/85 backdrop-blur transition-transform duration-300 data-[hidden]:-translate-y-full dark:border-wool-800/70 dark:bg-wool-950/85"
 >
-  <nav aria-label="Primary" class="mx-auto flex max-w-5xl items-center justify-between gap-4 px-5 py-3">
-    <a href="#top" class="text-base font-bold tracking-tight">{profile.name}</a>
-    <ul class="flex gap-1 text-sm font-medium sm:gap-2">
-      {
-        links.map((link) => (
-          <li class={link.desktopOnly ? "hidden md:block" : undefined}>
-            <a
-              href={link.href}
-              class="inline-flex min-h-11 items-center px-3 text-wool-700 hover:bg-wool-100 hover:text-wool-950 focus-visible:outline-2 focus-visible:outline-bark-600 dark:text-wool-300 dark:hover:bg-wool-800 dark:hover:text-white"
-            >
-              {link.label}
-            </a>
-          </li>
-        ))
-      }
-    </ul>
+  <nav aria-label="Primary" class="mx-auto flex max-w-5xl items-center justify-between gap-4 px-5 py-2">
+    <a href="#" class="font-script text-4xl leading-none sm:text-5xl">{profile.name}</a>
+    <div class="-mr-2 flex items-center">
+      <ul class="mr-2 hidden gap-2 text-sm font-medium md:flex">
+        {
+          links.map((link) => (
+            <li>
+              <a
+                href={link.href}
+                class="inline-flex min-h-11 items-center px-3 text-wool-700 hover:bg-wool-100 hover:text-wool-950 focus-visible:outline-2 focus-visible:outline-bark-600 dark:text-wool-300 dark:hover:bg-wool-800 dark:hover:text-white"
+              >
+                {link.label}
+              </a>
+            </li>
+          ))
+        }
+      </ul>
+      <button type="button" aria-label="Search" class={iconButton}>
+        <svg class="size-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" aria-hidden="true">
+          <circle cx="10.5" cy="10.5" r="6.5"></circle>
+          <path d="m15.5 15.5 5 5"></path>
+        </svg>
+      </button>
+      <a href="#" aria-label="Shopping cart" class={iconButton}>
+        <svg class="size-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="M2.5 3.5h2.6l2.3 11.2a1.5 1.5 0 0 0 1.5 1.2h8.6a1.5 1.5 0 0 0 1.5-1.1l1.7-7.3H6"></path>
+          <circle cx="9.5" cy="19.8" r="1.4"></circle>
+          <circle cx="17" cy="19.8" r="1.4"></circle>
+        </svg>
+      </a>
+      <button
+        type="button"
+        data-menu-button
+        aria-expanded="false"
+        aria-controls="mobile-menu"
+        aria-label="Menu"
+        class:list={["group flex-col gap-1.5 md:hidden", iconButton]}
+      >
+        <span class="h-0.5 w-6 bg-current transition-transform duration-300 group-aria-expanded:translate-y-2 group-aria-expanded:rotate-45"></span>
+        <span class="h-0.5 w-6 bg-current transition-opacity duration-300 group-aria-expanded:opacity-0"></span>
+        <span class="h-0.5 w-6 bg-current transition-transform duration-300 group-aria-expanded:-translate-y-2 group-aria-expanded:-rotate-45"></span>
+      </button>
+    </div>
   </nav>
 </header>
+
+<div
+  id="mobile-menu"
+  data-menu
+  inert
+  class="fixed inset-0 z-[35] flex -translate-y-full flex-col items-center justify-center gap-6 bg-wool-50 opacity-0 transition-[translate,opacity] duration-300 data-[open]:translate-y-0 data-[open]:opacity-100 md:hidden dark:bg-wool-950"
+>
+  {
+    links.map((link) => (
+      <a
+        href={link.href}
+        class="px-6 py-2 text-3xl font-medium tracking-tight text-wool-900 hover:text-bark-600 focus-visible:outline-2 focus-visible:outline-bark-600 dark:text-wool-100 dark:hover:text-bark-300"
+      >
+        {link.label}
+      </a>
+    ))
+  }
+</div>
+
+<script>
+  const header = document.querySelector<HTMLElement>("[data-site-header]")!;
+  const button = header.querySelector<HTMLButtonElement>("[data-menu-button]")!;
+  const menu = document.querySelector<HTMLElement>("[data-menu]")!;
+  const isOpen = () => button.getAttribute("aria-expanded") === "true";
+
+  const setOpen = (open: boolean) => {
+    button.setAttribute("aria-expanded", String(open));
+    menu.toggleAttribute("data-open", open);
+    menu.inert = !open;
+    document.documentElement.classList.toggle("overflow-hidden", open);
+    if (open) header.removeAttribute("data-hidden");
+  };
+  button.addEventListener("click", () => setOpen(!isOpen()));
+  menu.addEventListener("click", (e) => (e.target as Element).closest("a") && setOpen(false));
+  addEventListener("keydown", (e) => e.key === "Escape" && isOpen() && setOpen(false));
+  matchMedia("(min-width: 48rem)").addEventListener("change", (e) => e.matches && setOpen(false));
+
+  let lastY = scrollY;
+  addEventListener(
+    "scroll",
+    () => {
+      const y = scrollY;
+      if (!isOpen()) header.toggleAttribute("data-hidden", y > lastY && y > header.offsetHeight);
+      lastY = y;
+    },
+    { passive: true },
+  );
+</script>
