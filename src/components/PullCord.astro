@@ -109,12 +109,23 @@ const ballScale = s.ballRadius / 13;
 
     let armed = false;
     let grabSize = 0;
+    let dirX = 0;
+    let dirY = 1;
     const render = () => {
       cord.setAttribute("d", rope.toPath());
-      const hx = rope.handleX;
-      const hy = rope.handleY + s.ballRadius - 2;
+      // The ball hangs off the cord end along the last segment, so it pivots around its attach point.
       const n = rope.n;
-      const angle = (Math.atan2(rope.xs[n - 1] - rope.xs[n - 2], rope.ys[n - 1] - rope.ys[n - 2]) * -180) / Math.PI;
+      const sx = rope.xs[n - 1] - rope.xs[n - 2];
+      const sy = rope.ys[n - 1] - rope.ys[n - 2];
+      const sl = Math.hypot(sx, sy);
+      if (sl > 0.5) {
+        dirX = sx / sl;
+        dirY = sy / sl;
+      }
+      const reach = s.ballRadius - 2;
+      const hx = rope.handleX + dirX * reach;
+      const hy = rope.handleY + dirY * reach;
+      const angle = (Math.atan2(dirX, dirY) * -180) / Math.PI;
       ballEl.setAttribute(
         "transform",
         `translate(${hx.toFixed(1)} ${hy.toFixed(1)}) rotate(${angle.toFixed(1)}) scale(${(s.ballRadius / 13).toFixed(3)})`,
