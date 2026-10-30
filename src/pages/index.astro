@@ -17,7 +17,7 @@ const year = new Date().getFullYear();
       <div class="mx-auto max-w-5xl px-5">
         <h2 id="work-heading" class="text-3xl font-bold tracking-wide uppercase">Selected works</h2>
         <p class="mt-2 text-wool-600 dark:text-wool-400">A few projects I've designed and built recently.</p>
-        <div class="mt-10 grid gap-6 md:grid-cols-2">
+        <div class="mt-10 grid gap-x-6 gap-y-12 md:grid-cols-2">
           {projects.map((project) => <ProjectCard project={project} />)}
         </div>
       </div>

@@ -24,9 +24,10 @@ export const profile = {
 export interface Project {
   title: string;
   summary: string;
-  tags: string[];
   image: ImageMetadata;
   alt: string;
+  /** Small facts shown under the title, e.g. date, duration, dimensions. */
+  details: { label: string; value: string }[];
   href?: string;
 }
 
@@ -34,29 +35,45 @@ export const projects: Project[] = [
   {
     title: "Orbit Dashboard",
     summary: "A real-time analytics dashboard that streams satellite telemetry and renders it with sub-50ms updates.",
-    tags: ["TypeScript", "WebSockets", "Canvas"],
     image: orbit,
+    details: [
+      { label: "Date", value: "March 2025" },
+      { label: "Duration", value: "6 weeks" },
+      { label: "Dimensions", value: "120 × 80 cm" },
+    ],
     alt: "Cream background with a charcoal ring orbiting a pale circle and a small brown dot",
   },
   {
     title: "Ledger Lite",
     summary: "A privacy-first budgeting app that keeps all data on-device and works fully offline.",
-    tags: ["PWA", "IndexedDB", "Accessibility"],
     image: ledger,
+    details: [
+      { label: "Date", value: "November 2024" },
+      { label: "Duration", value: "3 weeks" },
+      { label: "Dimensions", value: "60 × 60 cm" },
+    ],
     alt: "Oatmeal to grey gradient with a rising bar chart, one bar highlighted in brown",
   },
   {
     title: "Trailhead",
     summary: "A hiking guide site with static maps and elevation profiles, scoring 100 on every Lighthouse category.",
-    tags: ["Astro", "SSG", "Maps"],
     image: trailhead,
-    alt: "Grey gradient behind cream mountain silhouettes and a pale brown sun",
+    details: [
+      { label: "Date", value: "June 2024" },
+      { label: "Duration", value: "2 months" },
+      { label: "Dimensions", value: "200 × 140 cm" },
+    ],
+    alt: "Grey gradient behind a cream mountain ridge and a pale brown sun",
   },
   {
     title: "PixelKit",
     summary: "An open-source design token toolkit that exports themes to CSS, iOS and Android from a single source.",
-    tags: ["Design Systems", "Node.js", "CLI"],
     image: pixelkit,
+    details: [
+      { label: "Date", value: "January 2024" },
+      { label: "Duration", value: "10 days" },
+      { label: "Dimensions", value: "40 × 30 cm" },
+    ],
     alt: "Charcoal background with a grid of cream and grey squares, one in brown",
   },
 ];
