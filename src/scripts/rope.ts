@@ -28,6 +28,9 @@ export interface RopeOptions extends Partial<RopePhysics> {
   points?: number;
 }
 
+/** Stretch (px) over which a held cord goes from free-hanging to fully taut. */
+const TAUT_EASE = 12;
+
 export const DEFAULT_PHYSICS: RopePhysics = {
   maxStretch: 110,
   gravity: 0.6,
@@ -219,6 +222,16 @@ export class Rope {
         ys[i] += dy * diff * wa;
         xs[j] -= dx * diff * wb;
         ys[j] -= dy * diff * wb;
+      }
+    }
+
+    // A cord pulled past its rest length is under tension and cannot sag; ease it onto the anchor-handle line.
+    if (this.dragging && this.ext > 0) {
+      const k = Math.min(this.ext / TAUT_EASE, 1);
+      for (let i = 1; i < h; i++) {
+        const t = i / h;
+        xs[i] += (xs[0] + (xs[h] - xs[0]) * t - xs[i]) * k;
+        ys[i] += (ys[0] + (ys[h] - ys[0]) * t - ys[i]) * k;
       }
     }
 
