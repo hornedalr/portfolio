@@ -5,7 +5,7 @@ import trailhead from "../assets/projects/trailhead.png";
 import pixelkit from "../assets/projects/pixelkit.png";
 
 export const profile = {
-  name: "Alex Morgan",
+  name: "Lara Braun",
   role: "Frontend & Creative Developer",
   location: "Stockholm, Sweden",
   tagline: "I build fast, accessible interfaces that feel effortless to use.",
