@@ -12,7 +12,7 @@ const headingId = `project-${project.title.toLowerCase().replace(/[^a-z0-9]+/g, 
 
 <article
   aria-labelledby={headingId}
-  class="group overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm transition hover:shadow-md dark:border-slate-800 dark:bg-slate-900"
+  class="group overflow-hidden rounded-2xl border border-wool-200 bg-white shadow-sm transition hover:shadow-md dark:border-wool-800 dark:bg-wool-900"
 >
   <Image
     src={project.image}
@@ -29,7 +29,7 @@ const headingId = `project-${project.title.toLowerCase().replace(/[^a-z0-9]+/g, 
     <h3 id={headingId} class="text-lg font-bold">
       {
         project.href ? (
-          <a href={project.href} class="hover:underline focus-visible:outline-2 focus-visible:outline-teal-600">
+          <a href={project.href} class="hover:underline focus-visible:outline-2 focus-visible:outline-bark-600">
             {project.title}
           </a>
         ) : (
@@ -37,11 +37,11 @@ const headingId = `project-${project.title.toLowerCase().replace(/[^a-z0-9]+/g, 
         )
       }
     </h3>
-    <p class="mt-2 text-slate-600 dark:text-slate-400">{project.summary}</p>
+    <p class="mt-2 text-wool-600 dark:text-wool-400">{project.summary}</p>
     <ul class="mt-4 flex flex-wrap gap-2" aria-label="Technologies">
       {
         project.tags.map((tag) => (
-          <li class="rounded-full bg-teal-50 px-3 py-1 text-xs font-medium text-teal-800 dark:bg-teal-950 dark:text-teal-300">
+          <li class="rounded-full bg-wool-200 px-3 py-1 text-xs font-medium text-wool-800 dark:bg-wool-800 dark:text-wool-200">
             {tag}
           </li>
         ))
