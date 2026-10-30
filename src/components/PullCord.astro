@@ -1,15 +1,27 @@
 ---
 // Lamp-pull cord that toggles light/dark mode. Static SVG renders the resting cord; the script adds physics.
+// Settings live in src/data/cord-settings.json; tune them live at /playground during `npm run dev`.
+import { cordSettings as s } from "../scripts/cord-settings";
+
+interface Props {
+  /** Positioning classes; defaults to hanging from the top-right of the hero. */
+  class?: string;
+  /** Enables live tuning events for the dev playground. */
+  debug?: boolean;
+}
+
+const { class: position = "top-0 right-2 sm:right-6 xl:right-[calc((100vw-64rem)/2-5rem)]", debug = false } = Astro.props;
+
 const width = 96;
-const rest = 130;
-const ball = 13;
 const cx = width / 2;
+const ballY = s.restLength + s.ballRadius - 2;
+const ballScale = s.ballRadius / 13;
 ---
 
 <div
   data-pull-cord
-  data-rest={rest}
-  class="pointer-events-none absolute top-0 right-2 z-30 h-80 w-24 sm:right-6 xl:right-[calc((100vw-64rem)/2-5rem)]"
+  data-debug={debug ? "" : undefined}
+  class:list={["pointer-events-none absolute z-30 h-80 w-24", position]}
 >
   <svg
     class="absolute inset-0 h-full w-full overflow-visible"
@@ -19,14 +31,14 @@ const cx = width / 2;
   >
     <path
       data-cord
-      d={`M${cx} 0 L${cx} ${rest}`}
+      d={`M${cx} 0 L${cx} ${s.restLength}`}
       fill="none"
-      stroke-width="2.5"
+      stroke-width={s.cordWidth}
       stroke-linecap="round"
       class="stroke-wool-600 transition-[stroke] duration-150 dark:stroke-wool-400"
     ></path>
-    <g data-ball transform={`translate(${cx} ${rest + ball - 2})`}>
-      <circle r={ball} class="fill-bark-300 stroke-bark-700 dark:fill-bark-500 dark:stroke-bark-200" stroke-width="1.5"></circle>
+    <g data-ball transform={`translate(${cx} ${ballY}) scale(${ballScale})`}>
+      <circle r="13" class="fill-bark-300 stroke-bark-700 dark:fill-bark-500 dark:stroke-bark-200" stroke-width="1.5"></circle>
       <path
         d="M-11 -5 C-4 -1 4 -1 11 -5 M-12 2 C-4 6 4 6 12 2 M-6 -11 C-2 -4 -2 4 -6 11 M3 -12 C7 -5 7 5 3 12"
         fill="none"
@@ -42,18 +54,17 @@ const cx = width / 2;
     aria-label="Dark mode"
     title="Pull for dark mode"
     class="pointer-events-auto absolute top-0 left-0 size-11 cursor-grab touch-none select-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-bark-600 active:cursor-grabbing"
-    style={`transform: translate(${cx - 22}px, ${rest + ball - 2 - 22}px)`}
+    style={`transform: translate(${cx - 22}px, ${ballY - 22}px)`}
   >
   </button>
 </div>
 
 <script>
   import { Rope } from "../scripts/rope";
+  import { cordSettings, type CordSettings } from "../scripts/cord-settings";
 
-  const BALL_OFFSET = 11;
-  const MAX_STRETCH = 110;
-  const TRIGGER = 50;
   const TAP_SLOP = 6;
+  const STEP_MS = 1000 / 60;
 
   const root = document.querySelector<HTMLElement>("[data-pull-cord]");
   const cord = root?.querySelector<SVGPathElement>("[data-cord]");
@@ -64,9 +75,13 @@ const cx = width / 2;
     const html = document.documentElement;
     const themeMeta = document.querySelector<HTMLMetaElement>('meta[name="theme-color"]');
     const reduceMotion = matchMedia("(prefers-reduced-motion: reduce)");
+    const debug = root.hasAttribute("data-debug");
     const anchorX = root.clientWidth / 2;
-    const restLength = Number(root.dataset.rest);
-    const rope = new Rope({ anchorX, anchorY: 0, restLength, maxStretch: MAX_STRETCH });
+
+    let s: CordSettings = { ...cordSettings };
+    let timeScale = 1;
+    const buildRope = () => new Rope({ anchorX, anchorY: 0, ...s });
+    let rope = buildRope();
 
     const isDark = () => html.classList.contains("dark");
 
@@ -96,37 +111,55 @@ const cx = width / 2;
     const render = () => {
       cord.setAttribute("d", rope.toPath());
       const hx = rope.handleX;
-      const hy = rope.handleY + BALL_OFFSET;
+      const hy = rope.handleY + s.ballRadius - 2;
       const n = rope.n;
       const angle = (Math.atan2(rope.xs[n - 1] - rope.xs[n - 2], rope.ys[n - 1] - rope.ys[n - 2]) * -180) / Math.PI;
-      ballEl.setAttribute("transform", `translate(${hx.toFixed(1)} ${hy.toFixed(1)}) rotate(${angle.toFixed(1)})`);
+      ballEl.setAttribute(
+        "transform",
+        `translate(${hx.toFixed(1)} ${hy.toFixed(1)}) rotate(${angle.toFixed(1)}) scale(${(s.ballRadius / 13).toFixed(3)})`,
+      );
       handle.style.transform = `translate(${(hx - 22).toFixed(1)}px, ${(hy - 22).toFixed(1)}px)`;
 
-      const tension = Math.min(rope.stretch / MAX_STRETCH, 1);
-      cord.setAttribute("stroke-width", (2.5 - tension * 1.1).toFixed(2));
-      const nowArmed = rope.isDragging && rope.stretch >= TRIGGER;
+      const tension = Math.min(rope.stretch / Math.max(s.maxStretch, 1), 1);
+      cord.setAttribute("stroke-width", Math.max(s.cordWidth - tension * s.tensionThinning, 0.5).toFixed(2));
+      const nowArmed = rope.isDragging && rope.stretch >= s.trigger;
       if (nowArmed !== armed) {
         armed = nowArmed;
         cord.classList.toggle("stroke-bark-600!", armed);
         cord.classList.toggle("dark:stroke-bark-300!", armed);
         if (armed) navigator.vibrate?.(8);
       }
+      if (debug) {
+        root.dispatchEvent(
+          new CustomEvent("cord:frame", {
+            bubbles: true,
+            detail: {
+              offset: rope.handleY - s.restLength,
+              stretch: rope.stretch,
+              armed,
+              dragging: rope.isDragging,
+              energy: rope.energy,
+            },
+          }),
+        );
+      }
     };
 
     // Fixed 60 Hz simulation; the loop sleeps whenever the cord is at rest.
-    const STEP_MS = 1000 / 60;
     let raf = 0;
     let last = 0;
     let acc = 0;
+    let autoPull: ((now: number) => void) | null = null;
     const frame = (now: number) => {
-      acc += Math.min(now - last, 100);
+      acc += Math.min(now - last, 100) * timeScale;
       last = now;
+      autoPull?.(now);
       while (acc >= STEP_MS) {
         rope.step();
         acc -= STEP_MS;
       }
       render();
-      if (rope.isDragging || rope.energy > 0.002) {
+      if (rope.isDragging || autoPull || rope.energy > 0.002) {
         raf = requestAnimationFrame(frame);
       } else {
         raf = 0;
@@ -139,6 +172,16 @@ const cx = width / 2;
       last = performance.now();
       acc = 0;
       raf = requestAnimationFrame(frame);
+    };
+
+    /** Ends a drag, toggling the theme if the cord was pulled far enough. */
+    const finishPull = (wasDrag: boolean) => {
+      const pulledEnough = rope.stretch >= s.trigger;
+      rope.endDrag();
+      if (wasDrag && pulledEnough) toggleTheme();
+      if (reduceMotion.matches) rope.reset();
+      render();
+      wake();
     };
 
     let pointerId: number | null = null;
@@ -155,7 +198,7 @@ const cx = width / 2;
     };
 
     handle.addEventListener("pointerdown", (e) => {
-      if (e.button !== 0 || pointerId !== null) return;
+      if (e.button !== 0 || pointerId !== null || autoPull) return;
       pointerId = e.pointerId;
       handle.setPointerCapture(e.pointerId);
       const p = local(e);
@@ -178,16 +221,9 @@ const cx = width / 2;
     const release = (e: PointerEvent) => {
       if (e.pointerId !== pointerId) return;
       pointerId = null;
-      const pulledEnough = rope.stretch >= TRIGGER;
-      rope.endDrag();
       // A plain tap is handled by the click listener; a drag decides here and swallows the click.
-      if (moved) {
-        suppressClick = true;
-        if (pulledEnough) toggleTheme();
-      }
-      if (reduceMotion.matches) rope.reset();
-      render();
-      wake();
+      if (moved) suppressClick = true;
+      finishPull(moved);
     };
     handle.addEventListener("pointerup", release);
     handle.addEventListener("pointercancel", (e) => {
@@ -203,7 +239,7 @@ const cx = width / 2;
         return;
       }
       if (!reduceMotion.matches) {
-        rope.tug(2.5);
+        rope.tug(s.tapTug);
         wake();
       }
       toggleTheme();
@@ -211,7 +247,7 @@ const cx = width / 2;
 
     handle.addEventListener("pointerenter", (e) => {
       if (e.pointerType === "mouse" && pointerId === null && !reduceMotion.matches) {
-        rope.impulse(1.5, 0);
+        rope.impulse(s.hoverNudge, 0);
         wake();
       }
     });
@@ -229,6 +265,44 @@ const cx = width / 2;
         syncLabel();
       }
     });
+
+    if (debug) {
+      window.addEventListener("cord:tune", (e) => {
+        const { settings, timeScale: ts } = (e as CustomEvent<{ settings: CordSettings; timeScale: number }>).detail;
+        const rebuild = settings.restLength !== s.restLength || settings.points !== s.points;
+        s = { ...settings };
+        timeScale = ts;
+        if (rebuild && !rope.isDragging) rope = buildRope();
+        else rope.configure(s);
+        render();
+        wake();
+      });
+
+      // Scripted pull to an exact stretch, for repeatable comparisons while tuning.
+      window.addEventListener("cord:autopull", (e) => {
+        if (pointerId !== null || autoPull) return;
+        const { distance, sideways = 0 } = (e as CustomEvent<{ distance: number; sideways?: number }>).detail;
+        const ratio = Math.min(distance / Math.max(s.maxStretch, 1), 0.995);
+        const raw = s.restLength + s.maxStretch * Math.atanh(ratio);
+        const pullMs = 280 / timeScale;
+        const holdMs = 160 / timeScale;
+        let t0 = -1;
+        autoPull = (now) => {
+          if (t0 < 0) {
+            t0 = now;
+            rope.startDrag(anchorX, s.restLength);
+          }
+          const k = Math.min((now - t0) / pullMs, 1);
+          const ease = 1 - (1 - k) ** 3;
+          rope.setDragTarget(anchorX + sideways * ease, s.restLength + (raw - s.restLength) * ease);
+          if (now - t0 >= pullMs + holdMs) {
+            autoPull = null;
+            finishPull(true);
+          }
+        };
+        wake();
+      });
+    }
 
     syncLabel();
   }
