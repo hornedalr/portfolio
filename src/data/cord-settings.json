@@ -9,10 +9,10 @@
   "maxSpeed": 24,
   "handleWeight": 5.9,
   "reelStiffness": 0.14,
-  "tapTug": 2.5,
-  "hoverNudge": 1.5,
+  "tapTug": 7,
+  "hoverNudge": 0.5,
   "ballRadius": 13,
   "cordWidth": 2.5,
   "tensionThinning": 1.1,
-  "swingGrab": 28
+  "swingGrab": 27
 }
