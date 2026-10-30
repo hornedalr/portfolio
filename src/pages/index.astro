@@ -1,0 +1,79 @@
+---
+import BaseLayout from "../layouts/BaseLayout.astro";
+import Header from "../components/Header.astro";
+import Hero from "../components/Hero.astro";
+import ProjectCard from "../components/ProjectCard.astro";
+import { profile, projects } from "../data/site";
+
+const year = new Date().getFullYear();
+---
+
+<BaseLayout title={`${profile.name} — ${profile.role}`} description={profile.tagline}>
+  <Header />
+  <main id="main">
+    <Hero />
+
+    <section id="work" aria-labelledby="work-heading" class="scroll-mt-16 bg-slate-50 py-16 sm:py-24 dark:bg-slate-900/50">
+      <div class="mx-auto max-w-5xl px-5">
+        <h2 id="work-heading" class="text-3xl font-bold tracking-tight">Selected work</h2>
+        <p class="mt-2 text-slate-600 dark:text-slate-400">A few projects I've designed and built recently.</p>
+        <div class="mt-10 grid gap-6 md:grid-cols-2">
+          {projects.map((project) => <ProjectCard project={project} />)}
+        </div>
+      </div>
+    </section>
+
+    <section id="about" aria-labelledby="about-heading" class="scroll-mt-16 py-16 sm:py-24">
+      <div class="mx-auto grid max-w-5xl gap-10 px-5 md:grid-cols-[1.4fr_1fr]">
+        <div>
+          <h2 id="about-heading" class="text-3xl font-bold tracking-tight">About me</h2>
+          {profile.bio.map((paragraph) => <p class="mt-4 text-lg text-slate-700 dark:text-slate-300">{paragraph}</p>)}
+        </div>
+        <div>
+          <h3 class="text-sm font-semibold tracking-wide text-slate-500 uppercase dark:text-slate-400">Toolbox</h3>
+          <ul class="mt-4 flex flex-wrap gap-2">
+            {
+              profile.skills.map((skill) => (
+                <li class="rounded-lg border border-slate-200 px-3 py-1.5 text-sm dark:border-slate-700">{skill}</li>
+              ))
+            }
+          </ul>
+        </div>
+      </div>
+    </section>
+
+    <section id="contact" aria-labelledby="contact-heading" class="scroll-mt-16 bg-teal-800 py-16 text-white sm:py-24">
+      <div class="mx-auto max-w-5xl px-5 text-center">
+        <h2 id="contact-heading" class="text-3xl font-bold tracking-tight">Let's build something</h2>
+        <p class="mx-auto mt-3 max-w-prose text-teal-100">
+          Have a project in mind or just want to say hi? My inbox is always open.
+        </p>
+        <a
+          href={`mailto:${profile.email}`}
+          class="mt-8 inline-flex min-h-11 items-center rounded-lg bg-white px-6 font-semibold text-teal-900 hover:bg-teal-50 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white"
+        >
+          {profile.email}
+        </a>
+        <ul class="mt-6 flex justify-center gap-2">
+          {
+            profile.socials.map((social) => (
+              <li>
+                <a
+                  href={social.href}
+                  rel="me noopener"
+                  class="inline-flex min-h-11 items-center rounded-md px-3 underline-offset-4 hover:underline focus-visible:outline-2 focus-visible:outline-white"
+                >
+                  {social.label}
+                </a>
+              </li>
+            ))
+          }
+        </ul>
+      </div>
+    </section>
+  </main>
+
+  <footer class="py-8 text-center text-sm text-slate-500 dark:text-slate-400">
+    <p>&copy; {year} {profile.name}. Built with Astro &amp; Tailwind CSS.</p>
+  </footer>
+</BaseLayout>
