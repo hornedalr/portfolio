@@ -1,10 +1,10 @@
 {
   "restLength": 108,
   "points": 14,
-  "maxStretch": 121,
+  "maxStretch": 170,
   "trigger": 50,
   "heldTension": 0.86,
-  "tautEase": 121,
+  "tautEase": 170,
   "gravity": 0.6,
   "damping": 0.967,
   "iterations": 30,
