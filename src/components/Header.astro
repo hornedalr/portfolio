@@ -1,7 +1,11 @@
 ---
 import { profile } from "../data/site";
 
-const links = [{ href: "#contact", label: "Contact" }];
+const links = [
+  { href: "#work", label: "Work", desktopOnly: true },
+  { href: "#about", label: "About", desktopOnly: true },
+  { href: "#contact", label: "Contact", desktopOnly: false },
+];
 ---
 
 <header
@@ -12,10 +16,10 @@ const links = [{ href: "#contact", label: "Contact" }];
     <ul class="flex gap-1 text-sm font-medium sm:gap-2">
       {
         links.map((link) => (
-          <li>
+          <li class={link.desktopOnly ? "hidden md:block" : undefined}>
             <a
               href={link.href}
-              class="inline-flex min-h-11 items-center rounded-md px-3 text-wool-700 hover:bg-wool-100 hover:text-wool-950 focus-visible:outline-2 focus-visible:outline-bark-600 dark:text-wool-300 dark:hover:bg-wool-800 dark:hover:text-white"
+              class="inline-flex min-h-11 items-center px-3 text-wool-700 hover:bg-wool-100 hover:text-wool-950 focus-visible:outline-2 focus-visible:outline-bark-600 dark:text-wool-300 dark:hover:bg-wool-800 dark:hover:text-white"
             >
               {link.label}
             </a>
