@@ -39,13 +39,26 @@ const iconButton =
           <path d="m15.5 15.5 5 5"></path>
         </svg>
       </button>
-      <a href="#" aria-label="Shopping cart" class={iconButton}>
+      <button
+        type="button"
+        data-cart-button
+        aria-label="Cart"
+        aria-controls="cart"
+        aria-expanded="false"
+        class:list={["relative", iconButton]}
+      >
         <svg class="size-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
           <path d="M2.5 3.5h2.6l2.3 11.2a1.5 1.5 0 0 0 1.5 1.2h8.6a1.5 1.5 0 0 0 1.5-1.1l1.7-7.3H6"></path>
           <circle cx="9.5" cy="19.8" r="1.4"></circle>
           <circle cx="17" cy="19.8" r="1.4"></circle>
         </svg>
-      </a>
+        <span
+          data-cart-count
+          hidden
+          aria-hidden="true"
+          class="absolute top-1 right-0.5 min-w-4 bg-bark-700 px-1 text-center text-[0.625rem] leading-4 font-semibold text-white tabular-nums"
+        ></span>
+      </button>
       <button
         type="button"
         data-menu-button

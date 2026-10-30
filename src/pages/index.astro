@@ -3,6 +3,8 @@ import BaseLayout from "../layouts/BaseLayout.astro";
 import Header from "../components/Header.astro";
 import Hero from "../components/Hero.astro";
 import ProjectCard from "../components/ProjectCard.astro";
+import Shop from "../components/Shop.astro";
+import Cart from "../components/Cart.astro";
 import { Image } from "astro:assets";
 import { profile, projects } from "../data/site";
 
@@ -11,6 +13,7 @@ const year = new Date().getFullYear();
 
 <BaseLayout title={`${profile.name} — ${profile.role}`} description={profile.tagline}>
   <Header />
+  <Cart />
   <main id="main">
     <Hero />
 
@@ -23,6 +26,8 @@ const year = new Date().getFullYear();
         </div>
       </div>
     </section>
+
+    <Shop />
 
     <section id="about" aria-labelledby="about-heading" class="scroll-mt-16 py-16 sm:py-24">
       <div class="mx-auto max-w-xl px-5">

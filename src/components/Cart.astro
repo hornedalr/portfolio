@@ -1,0 +1,148 @@
+---
+import { formatPrice, products } from "../data/shop";
+
+const catalogue = Object.fromEntries(products.map((p) => [p.id, { title: p.title, price: p.price }]));
+const iconButton =
+  "inline-flex size-11 items-center justify-center text-wool-800 hover:bg-wool-100 focus-visible:outline-2 focus-visible:outline-bark-600 dark:text-wool-200 dark:hover:bg-wool-800";
+---
+
+<div
+  data-cart-backdrop
+  class="pointer-events-none fixed inset-0 z-[45] bg-wool-950/40 opacity-0 transition-opacity duration-300 data-[open]:pointer-events-auto data-[open]:opacity-100"
+>
+</div>
+<aside
+  id="cart"
+  data-cart
+  inert
+  aria-labelledby="cart-heading"
+  class="fixed inset-y-0 right-0 z-50 flex w-full translate-x-full flex-col bg-wool-50 shadow-xl transition-transform duration-300 data-[open]:translate-x-0 sm:max-w-sm dark:bg-wool-950"
+>
+  <div class="flex items-center justify-between border-b border-wool-200 py-2 pr-3 pl-5 dark:border-wool-800">
+    <h2 id="cart-heading" class="text-sm font-semibold tracking-wide uppercase">Cart</h2>
+    <button type="button" data-cart-close aria-label="Close cart" class={iconButton}>
+      <svg class="size-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" aria-hidden="true">
+        <path d="m6 6 12 12M18 6 6 18"></path>
+      </svg>
+    </button>
+  </div>
+  <p data-cart-empty class="px-5 py-8 text-wool-600 dark:text-wool-400">Your cart is empty.</p>
+  <ul data-cart-items class="flex-1 divide-y divide-wool-200 overflow-y-auto px-5 dark:divide-wool-800"></ul>
+  <div class="border-t border-wool-200 px-5 py-5 dark:border-wool-800">
+    <div class="flex justify-between text-sm">
+      <span>Subtotal</span>
+      <span data-cart-total class="tabular-nums">{formatPrice(0)}</span>
+    </div>
+    <button
+      type="button"
+      disabled
+      aria-describedby="checkout-note"
+      class="mt-4 min-h-11 w-full cursor-not-allowed bg-wool-300 text-sm font-semibold text-wool-700 dark:bg-wool-800 dark:text-wool-300"
+    >
+      Checkout
+    </button>
+    <p id="checkout-note" class="mt-2 text-center text-xs text-wool-600 dark:text-wool-400">
+      Checkout isn't open yet. This shop is a preview.
+    </p>
+  </div>
+  <p data-cart-status class="sr-only" aria-live="polite"></p>
+</aside>
+<script type="application/json" data-catalogue set:html={JSON.stringify(catalogue)} />
+
+<script>
+  type Catalogue = Record<string, { title: string; price: number }>;
+  const catalogue: Catalogue = JSON.parse(document.querySelector("[data-catalogue]")!.textContent!);
+  const format = (kr: number) => `${new Intl.NumberFormat("sv-SE").format(kr)} kr`;
+
+  const drawer = document.querySelector<HTMLElement>("[data-cart]")!;
+  const backdrop = document.querySelector<HTMLElement>("[data-cart-backdrop]")!;
+  const list = drawer.querySelector<HTMLUListElement>("[data-cart-items]")!;
+  const empty = drawer.querySelector<HTMLElement>("[data-cart-empty]")!;
+  const total = drawer.querySelector<HTMLElement>("[data-cart-total]")!;
+  const status = drawer.querySelector<HTMLElement>("[data-cart-status]")!;
+  const closeButton = drawer.querySelector<HTMLButtonElement>("[data-cart-close]")!;
+  const toggle = document.querySelector<HTMLButtonElement>("[data-cart-button]")!;
+  const count = toggle.querySelector<HTMLElement>("[data-cart-count]")!;
+
+  const KEY = "cart";
+  let cart: Record<string, number> = {};
+  try {
+    cart = JSON.parse(localStorage.getItem(KEY) ?? "{}");
+  } catch {}
+
+  const el = <K extends keyof HTMLElementTagNameMap>(tag: K, className: string, text = "") => {
+    const node = document.createElement(tag);
+    node.className = className;
+    node.textContent = text;
+    return node;
+  };
+  const qtyButton = (id: string, delta: number, label: string) => {
+    const b = el("button", "inline-flex size-8 items-center justify-center border border-wool-300 hover:bg-wool-100 focus-visible:outline-2 focus-visible:outline-bark-600 dark:border-wool-700 dark:hover:bg-wool-800", delta > 0 ? "+" : "−");
+    b.type = "button";
+    b.dataset.qty = `${id}:${delta}`;
+    b.setAttribute("aria-label", label);
+    return b;
+  };
+
+  const render = () => {
+    const ids = Object.keys(cart).filter((id) => catalogue[id] && cart[id] > 0);
+    const items = ids.reduce((n, id) => n + cart[id], 0);
+    count.textContent = String(items);
+    count.hidden = items === 0;
+    toggle.setAttribute("aria-label", items ? `Cart, ${items} item${items > 1 ? "s" : ""}` : "Cart");
+    empty.hidden = items > 0;
+    total.textContent = format(ids.reduce((sum, id) => sum + cart[id] * catalogue[id].price, 0));
+    list.replaceChildren(
+      ...ids.map((id) => {
+        const { title, price } = catalogue[id];
+        const li = el("li", "flex items-center gap-3 py-4");
+        const info = el("div", "min-w-0 flex-1");
+        info.append(el("p", "text-sm font-semibold tracking-wide uppercase", title), el("p", "text-xs text-wool-600 tabular-nums dark:text-wool-400", format(price * cart[id])));
+        const qty = el("div", "flex items-center gap-2 text-sm tabular-nums");
+        qty.append(qtyButton(id, -1, `One fewer ${title}`), el("span", "w-5 text-center", String(cart[id])), qtyButton(id, 1, `One more ${title}`));
+        li.append(info, qty);
+        return li;
+      }),
+    );
+  };
+
+  const setQty = (id: string, qty: number) => {
+    if (qty > 0) cart[id] = qty;
+    else delete cart[id];
+    localStorage.setItem(KEY, JSON.stringify(cart));
+    render();
+  };
+
+  const setOpen = (open: boolean) => {
+    drawer.toggleAttribute("data-open", open);
+    backdrop.toggleAttribute("data-open", open);
+    drawer.inert = !open;
+    toggle.setAttribute("aria-expanded", String(open));
+    document.documentElement.classList.toggle("overflow-hidden", open);
+    (open ? closeButton : toggle).focus({ preventScroll: true });
+  };
+
+  toggle.addEventListener("click", () => setOpen(true));
+  closeButton.addEventListener("click", () => setOpen(false));
+  backdrop.addEventListener("click", () => setOpen(false));
+  addEventListener("keydown", (e) => e.key === "Escape" && drawer.hasAttribute("data-open") && setOpen(false));
+
+  list.addEventListener("click", (e) => {
+    const b = (e.target as Element).closest<HTMLElement>("[data-qty]");
+    if (!b) return;
+    const [id, delta] = b.dataset.qty!.split(":");
+    setQty(id, (cart[id] ?? 0) + Number(delta));
+  });
+
+  document.addEventListener("click", (e) => {
+    const b = (e.target as Element).closest<HTMLButtonElement>("[data-add-to-cart]");
+    const id = b?.dataset.addToCart;
+    if (!b || !id || !catalogue[id]) return;
+    setQty(id, (cart[id] ?? 0) + 1);
+    status.textContent = `Added ${catalogue[id].title} to cart`;
+    b.setAttribute("data-added", "");
+    setTimeout(() => b.removeAttribute("data-added"), 1200);
+  });
+
+  render();
+</script>
