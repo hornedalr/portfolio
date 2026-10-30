@@ -2,43 +2,47 @@
 import { Image } from "astro:assets";
 import hero from "../assets/hero.png";
 import { profile } from "../data/site";
+import PullCord from "./PullCord.astro";
 ---
 
-<section id="top" aria-labelledby="hero-heading" class="mx-auto max-w-5xl px-5 pt-12 pb-16 sm:pt-20 sm:pb-24">
-  <div class="grid items-center gap-10 md:grid-cols-[1.4fr_1fr]">
-    <div>
-      <p class="text-sm font-semibold tracking-wide text-bark-700 uppercase dark:text-bark-300">{profile.role}</p>
-      <h1 id="hero-heading" class="mt-3 text-4xl font-extrabold tracking-tight text-balance sm:text-5xl">
-        Hi, I'm {profile.name}. {profile.tagline}
-      </h1>
-      <p class="mt-5 max-w-prose text-lg text-wool-600 dark:text-wool-400">
-        Based in {profile.location}. Currently open to freelance and full-time roles.
-      </p>
-      <div class="mt-8 flex flex-wrap gap-3">
-        <a
-          href="#work"
-          class="inline-flex min-h-11 items-center bg-bark-700 px-5 font-semibold text-white hover:bg-bark-800 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-bark-600"
-        >
-          View my work
-        </a>
-        <a
-          href="#contact"
-          class="inline-flex min-h-11 items-center border border-wool-300 px-5 font-semibold hover:bg-wool-100 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-bark-600 dark:border-wool-700 dark:hover:bg-wool-800"
-        >
-          Get in touch
-        </a>
+<section id="top" aria-labelledby="hero-heading" class="relative">
+  <PullCord />
+  <div class="mx-auto max-w-5xl px-5 pt-12 pb-16 sm:pt-20 sm:pb-24">
+    <div class="grid items-center gap-10 md:grid-cols-[1.4fr_1fr] md:pr-24 xl:pr-0">
+      <div class="pr-14 md:pr-0">
+        <p class="text-sm font-semibold tracking-wide text-bark-700 uppercase dark:text-bark-300">{profile.role}</p>
+        <h1 id="hero-heading" class="mt-3 text-4xl font-extrabold tracking-tight text-balance sm:text-5xl">
+          Hi, I'm {profile.name}. {profile.tagline}
+        </h1>
+        <p class="mt-5 max-w-prose text-lg text-wool-600 dark:text-wool-400">
+          Based in {profile.location}. Currently open to freelance and full-time roles.
+        </p>
+        <div class="mt-8 flex flex-wrap gap-3">
+          <a
+            href="#work"
+            class="inline-flex min-h-11 items-center bg-bark-700 px-5 font-semibold text-white hover:bg-bark-800 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-bark-600"
+          >
+            View my work
+          </a>
+          <a
+            href="#contact"
+            class="inline-flex min-h-11 items-center border border-wool-300 px-5 font-semibold hover:bg-wool-100 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-bark-600 dark:border-wool-700 dark:hover:bg-wool-800"
+          >
+            Get in touch
+          </a>
+        </div>
       </div>
+      <Image
+        src={hero}
+        alt={`Illustrated portrait of ${profile.name}`}
+        width={480}
+        height={480}
+        widths={[320, 480, 960]}
+        sizes="(min-width: 768px) 480px, 80vw"
+        loading="eager"
+        fetchpriority="high"
+        class="mx-auto aspect-square w-4/5 max-w-sm shadow-xl md:w-full"
+      />
     </div>
-    <Image
-      src={hero}
-      alt={`Illustrated portrait of ${profile.name}`}
-      width={480}
-      height={480}
-      widths={[320, 480, 960]}
-      sizes="(min-width: 768px) 480px, 80vw"
-      loading="eager"
-      fetchpriority="high"
-      class="mx-auto aspect-square w-4/5 max-w-sm shadow-xl md:w-full"
-    />
   </div>
 </section>

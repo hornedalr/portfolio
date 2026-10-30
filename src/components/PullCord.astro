@@ -1,0 +1,235 @@
+---
+// Lamp-pull cord that toggles light/dark mode. Static SVG renders the resting cord; the script adds physics.
+const width = 96;
+const rest = 130;
+const ball = 13;
+const cx = width / 2;
+---
+
+<div
+  data-pull-cord
+  data-rest={rest}
+  class="pointer-events-none absolute top-0 right-2 z-30 h-80 w-24 sm:right-6 xl:right-[calc((100vw-64rem)/2-5rem)]"
+>
+  <svg
+    class="absolute inset-0 h-full w-full overflow-visible"
+    viewBox={`0 0 ${width} 320`}
+    aria-hidden="true"
+    focusable="false"
+  >
+    <path
+      data-cord
+      d={`M${cx} 0 L${cx} ${rest}`}
+      fill="none"
+      stroke-width="2.5"
+      stroke-linecap="round"
+      class="stroke-wool-600 transition-[stroke] duration-150 dark:stroke-wool-400"
+    ></path>
+    <g data-ball transform={`translate(${cx} ${rest + ball - 2})`}>
+      <circle r={ball} class="fill-bark-300 stroke-bark-700 dark:fill-bark-500 dark:stroke-bark-200" stroke-width="1.5"></circle>
+      <path
+        d="M-11 -5 C-4 -1 4 -1 11 -5 M-12 2 C-4 6 4 6 12 2 M-6 -11 C-2 -4 -2 4 -6 11 M3 -12 C7 -5 7 5 3 12"
+        fill="none"
+        stroke-width="1.2"
+        class="stroke-bark-700 dark:stroke-bark-200"
+      ></path>
+    </g>
+  </svg>
+  <button
+    type="button"
+    data-cord-handle
+    aria-pressed="false"
+    aria-label="Dark mode"
+    title="Pull for dark mode"
+    class="pointer-events-auto absolute top-0 left-0 size-11 cursor-grab touch-none select-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-bark-600 active:cursor-grabbing"
+    style={`transform: translate(${cx - 22}px, ${rest + ball - 2 - 22}px)`}
+  >
+  </button>
+</div>
+
+<script>
+  import { Rope } from "../scripts/rope";
+
+  const BALL_OFFSET = 11;
+  const MAX_STRETCH = 110;
+  const TRIGGER = 50;
+  const TAP_SLOP = 6;
+
+  const root = document.querySelector<HTMLElement>("[data-pull-cord]");
+  const cord = root?.querySelector<SVGPathElement>("[data-cord]");
+  const ballEl = root?.querySelector<SVGGElement>("[data-ball]");
+  const handle = root?.querySelector<HTMLButtonElement>("[data-cord-handle]");
+
+  if (root && cord && ballEl && handle) {
+    const html = document.documentElement;
+    const themeMeta = document.querySelector<HTMLMetaElement>('meta[name="theme-color"]');
+    const reduceMotion = matchMedia("(prefers-reduced-motion: reduce)");
+    const anchorX = root.clientWidth / 2;
+    const restLength = Number(root.dataset.rest);
+    const rope = new Rope({ anchorX, anchorY: 0, restLength, maxStretch: MAX_STRETCH });
+
+    const isDark = () => html.classList.contains("dark");
+
+    const syncLabel = () => {
+      const dark = isDark();
+      handle.setAttribute("aria-pressed", String(dark));
+      handle.title = dark ? "Pull for light mode" : "Pull for dark mode";
+    };
+
+    const toggleTheme = () => {
+      const dark = !isDark();
+      if (!reduceMotion.matches) {
+        html.classList.add("theme-fade");
+        window.setTimeout(() => html.classList.remove("theme-fade"), 450);
+      }
+      html.classList.toggle("dark", dark);
+      try {
+        localStorage.setItem("theme", dark ? "dark" : "light");
+      } catch {
+        // Storage can be unavailable (private mode); the toggle still works for this visit.
+      }
+      themeMeta?.setAttribute("content", dark ? "#171514" : "#faf8f4");
+      syncLabel();
+    };
+
+    let armed = false;
+    const render = () => {
+      cord.setAttribute("d", rope.toPath());
+      const hx = rope.handleX;
+      const hy = rope.handleY + BALL_OFFSET;
+      const n = rope.n;
+      const angle = (Math.atan2(rope.xs[n - 1] - rope.xs[n - 2], rope.ys[n - 1] - rope.ys[n - 2]) * -180) / Math.PI;
+      ballEl.setAttribute("transform", `translate(${hx.toFixed(1)} ${hy.toFixed(1)}) rotate(${angle.toFixed(1)})`);
+      handle.style.transform = `translate(${(hx - 22).toFixed(1)}px, ${(hy - 22).toFixed(1)}px)`;
+
+      const tension = Math.min(rope.stretch / MAX_STRETCH, 1);
+      cord.setAttribute("stroke-width", (2.5 - tension * 1.1).toFixed(2));
+      const nowArmed = rope.isDragging && rope.stretch >= TRIGGER;
+      if (nowArmed !== armed) {
+        armed = nowArmed;
+        cord.classList.toggle("stroke-bark-600!", armed);
+        cord.classList.toggle("dark:stroke-bark-300!", armed);
+        if (armed) navigator.vibrate?.(8);
+      }
+    };
+
+    // Fixed 60 Hz simulation; the loop sleeps whenever the cord is at rest.
+    const STEP_MS = 1000 / 60;
+    let raf = 0;
+    let last = 0;
+    let acc = 0;
+    const frame = (now: number) => {
+      acc += Math.min(now - last, 100);
+      last = now;
+      while (acc >= STEP_MS) {
+        rope.step();
+        acc -= STEP_MS;
+      }
+      render();
+      if (rope.isDragging || rope.energy > 0.002) {
+        raf = requestAnimationFrame(frame);
+      } else {
+        raf = 0;
+        rope.reset();
+        render();
+      }
+    };
+    const wake = () => {
+      if (raf) return;
+      last = performance.now();
+      acc = 0;
+      raf = requestAnimationFrame(frame);
+    };
+
+    let pointerId: number | null = null;
+    let grabDx = 0;
+    let grabDy = 0;
+    let startX = 0;
+    let startY = 0;
+    let moved = false;
+    let suppressClick = false;
+
+    const local = (e: PointerEvent) => {
+      const r = root.getBoundingClientRect();
+      return { x: e.clientX - r.left, y: e.clientY - r.top };
+    };
+
+    handle.addEventListener("pointerdown", (e) => {
+      if (e.button !== 0 || pointerId !== null) return;
+      pointerId = e.pointerId;
+      handle.setPointerCapture(e.pointerId);
+      const p = local(e);
+      grabDx = p.x - rope.handleX;
+      grabDy = p.y - rope.handleY;
+      startX = e.clientX;
+      startY = e.clientY;
+      moved = false;
+      rope.startDrag(p.x - grabDx, p.y - grabDy);
+      wake();
+    });
+
+    handle.addEventListener("pointermove", (e) => {
+      if (e.pointerId !== pointerId) return;
+      if (!moved && Math.hypot(e.clientX - startX, e.clientY - startY) > TAP_SLOP) moved = true;
+      const p = local(e);
+      rope.setDragTarget(p.x - grabDx, p.y - grabDy);
+    });
+
+    const release = (e: PointerEvent) => {
+      if (e.pointerId !== pointerId) return;
+      pointerId = null;
+      const pulledEnough = rope.stretch >= TRIGGER;
+      rope.endDrag();
+      // A plain tap is handled by the click listener; a drag decides here and swallows the click.
+      if (moved) {
+        suppressClick = true;
+        if (pulledEnough) toggleTheme();
+      }
+      if (reduceMotion.matches) rope.reset();
+      render();
+      wake();
+    };
+    handle.addEventListener("pointerup", release);
+    handle.addEventListener("pointercancel", (e) => {
+      if (e.pointerId !== pointerId) return;
+      moved = false;
+      release(e);
+    });
+
+    // Taps and keyboard (Enter/Space) give the cord a tug and toggle.
+    handle.addEventListener("click", () => {
+      if (suppressClick) {
+        suppressClick = false;
+        return;
+      }
+      if (!reduceMotion.matches) {
+        rope.tug(2.5);
+        wake();
+      }
+      toggleTheme();
+    });
+
+    handle.addEventListener("pointerenter", (e) => {
+      if (e.pointerType === "mouse" && pointerId === null && !reduceMotion.matches) {
+        rope.impulse(1.5, 0);
+        wake();
+      }
+    });
+
+    // Follow OS theme changes until the visitor has made an explicit choice.
+    matchMedia("(prefers-color-scheme: dark)").addEventListener("change", (e) => {
+      let stored: string | null = null;
+      try {
+        stored = localStorage.getItem("theme");
+      } catch {
+        stored = null;
+      }
+      if (stored === null && e.matches !== isDark()) {
+        html.classList.toggle("dark", e.matches);
+        syncLabel();
+      }
+    });
+
+    syncLabel();
+  }
+</script>
