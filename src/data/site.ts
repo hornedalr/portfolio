@@ -3,6 +3,7 @@ import orbit from "../assets/projects/orbit.png";
 import ledger from "../assets/projects/ledger.png";
 import trailhead from "../assets/projects/trailhead.png";
 import pixelkit from "../assets/projects/pixelkit.png";
+import portrait from "../assets/portrait.png";
 
 export const profile = {
   name: "Lara Braun",
@@ -13,12 +14,13 @@ export const profile = {
     "I'm a developer with a background in design, focused on turning complex problems into simple, delightful web experiences.",
     "I care about performance budgets, semantic HTML and inclusive design. When I'm not shipping UI, I'm prototyping small games or photographing city architecture.",
   ],
+  portrait,
+  portraitAlt: "Portrait of Lara Braun",
   email: "hello@alexmorgan.dev",
   socials: [
     { label: "GitHub", href: "https://github.com/" },
     { label: "LinkedIn", href: "https://www.linkedin.com/" },
   ],
-  skills: ["TypeScript", "Astro", "Tailwind CSS", "Accessibility", "Web Performance", "Figma", "Node.js", "WebGL"],
 };
 
 export interface Project {

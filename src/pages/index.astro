@@ -3,6 +3,7 @@ import BaseLayout from "../layouts/BaseLayout.astro";
 import Header from "../components/Header.astro";
 import Hero from "../components/Hero.astro";
 import ProjectCard from "../components/ProjectCard.astro";
+import { Image } from "astro:assets";
 import { profile, projects } from "../data/site";
 
 const year = new Date().getFullYear();
@@ -24,21 +25,20 @@ const year = new Date().getFullYear();
     </section>
 
     <section id="about" aria-labelledby="about-heading" class="scroll-mt-16 py-16 sm:py-24">
-      <div class="mx-auto grid max-w-5xl gap-10 px-5 md:grid-cols-[1.4fr_1fr]">
-        <div>
-          <h2 id="about-heading" class="text-3xl font-bold tracking-tight">About me</h2>
-          {profile.bio.map((paragraph) => <p class="mt-4 text-lg text-wool-700 dark:text-wool-300">{paragraph}</p>)}
-        </div>
-        <div>
-          <h3 class="text-sm font-semibold tracking-wide text-wool-600 uppercase dark:text-wool-400">Toolbox</h3>
-          <ul class="mt-4 flex flex-wrap gap-2">
-            {
-              profile.skills.map((skill) => (
-                <li class="border border-wool-300 px-3 py-1.5 text-sm dark:border-wool-700">{skill}</li>
-              ))
-            }
-          </ul>
-        </div>
+      <div class="mx-auto max-w-xl px-5">
+        <Image
+          src={profile.portrait}
+          alt={profile.portraitAlt}
+          width={576}
+          height={720}
+          widths={[400, 576, 1080]}
+          sizes="(min-width: 640px) 536px, 100vw"
+          loading="lazy"
+          decoding="async"
+          class="reveal h-auto w-full"
+        />
+        <h2 id="about-heading" class="mt-8 text-3xl font-bold tracking-wide uppercase">About me</h2>
+        {profile.bio.map((paragraph) => <p class="mt-4 text-lg text-wool-700 dark:text-wool-300">{paragraph}</p>)}
       </div>
     </section>
 
