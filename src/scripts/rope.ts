@@ -19,6 +19,10 @@ export interface RopePhysics {
   handleWeight: number;
   /** Reel spring frequency per step; higher = faster snap back and a bigger fling. */
   reelStiffness: number;
+  /** How taut the cord is while held past rest length: 0 = sags naturally, 1 = perfectly straight. */
+  heldTension: number;
+  /** Stretch (px) over which a held cord goes from free-hanging to its full tension. */
+  tautEase: number;
 }
 
 export interface RopeOptions extends Partial<RopePhysics> {
@@ -28,9 +32,6 @@ export interface RopeOptions extends Partial<RopePhysics> {
   points?: number;
 }
 
-/** Stretch (px) over which a held cord goes from free-hanging to fully taut. */
-const TAUT_EASE = 12;
-
 export const DEFAULT_PHYSICS: RopePhysics = {
   maxStretch: 110,
   gravity: 0.6,
@@ -39,6 +40,8 @@ export const DEFAULT_PHYSICS: RopePhysics = {
   maxSpeed: 24,
   handleWeight: 2.5,
   reelStiffness: 0.08,
+  heldTension: 1,
+  tautEase: 12,
 };
 
 export class Rope {
@@ -225,9 +228,12 @@ export class Rope {
       }
     }
 
-    // A cord pulled past its rest length is under tension and cannot sag; ease it onto the anchor-handle line.
-    if (this.dragging && this.ext > 0) {
-      const k = Math.min(this.ext / TAUT_EASE, 1);
+    // A cord pulled past its rest length is under tension; pull it toward the anchor-handle line.
+    // Per-step blending compounds, so the slider is remapped to make sag removal roughly proportional to it.
+    if (this.dragging && this.ext > 0 && this.p.heldTension > 0) {
+      const ease = Math.min(this.ext / Math.max(this.p.tautEase, 0.1), 1);
+      const t = Math.min(this.p.heldTension, 1);
+      const k = ease * (t >= 1 ? 1 : Math.min((0.03 * t) / (1 - t), 1));
       for (let i = 1; i < h; i++) {
         const t = i / h;
         xs[i] += (xs[0] + (xs[h] - xs[0]) * t - xs[i]) * k;
