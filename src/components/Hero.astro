@@ -2,6 +2,7 @@
 import { profile } from "../data/site";
 import HeroLamps from "./HeroLamps.astro";
 import PullCord from "./PullCord.astro";
+import ScrollHint from "./ScrollHint.astro";
 
 // A full screen with just the sheep on its cord among sketched lamps, so the works only appear once you scroll.
 ---
@@ -9,5 +10,6 @@ import PullCord from "./PullCord.astro";
 <section data-hero aria-labelledby="hero-heading" class="relative h-svh overflow-x-clip">
   <HeroLamps />
   <PullCord class="top-0 left-1/2 -translate-x-1/2" />
+  <ScrollHint />
   <h1 id="hero-heading" class="sr-only">{profile.name}</h1>
 </section>
