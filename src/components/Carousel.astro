@@ -1,0 +1,248 @@
+---
+// Swipeable pictures (native scroll snapping) with dots and desktop arrows. With `zoom`, tapping a picture opens a
+// full-screen gallery of the same pictures that can be swiped too.
+import type { ImageMetadata } from "astro";
+import { Image } from "astro:assets";
+
+export interface Slide {
+  image: ImageMetadata;
+  alt: string;
+}
+
+interface Props {
+  slides: Slide[];
+  /** Name of the set, for screen readers ("…, 3 pictures"). */
+  label: string;
+  width: number;
+  height: number;
+  widths: number[];
+  sizes: string;
+  zoom?: boolean;
+  /** The first picture is the main thing on the page: load it straight away. */
+  priority?: boolean;
+}
+
+const { slides, label, width, height, widths, sizes, zoom = false, priority = false } = Astro.props;
+const multiple = slides.length > 1;
+const lightboxId = zoom ? `lightbox-${Math.random().toString(36).slice(2, 8)}` : undefined;
+const arrow =
+  "absolute top-1/2 hidden size-10 -translate-y-1/2 items-center justify-center text-white opacity-0 drop-shadow-[0_0_3px_rgb(0_0_0/0.55)] transition-opacity duration-200 group-hover/gallery:opacity-100 focus-visible:opacity-100 focus-visible:outline-2 focus-visible:outline-bark-600 disabled:pointer-events-none disabled:invisible pointer-fine:flex";
+const dotsClass =
+  "pointer-events-none absolute inset-x-0 bottom-3 flex justify-center gap-1.5 opacity-0 transition-opacity duration-300 group-hover/gallery:opacity-100 group-data-[swiping]/gallery:opacity-100";
+const dotClass =
+  "size-1.5 rounded-full bg-white/50 shadow-[0_0_2px_rgb(0_0_0/0.4)] transition-[background-color,scale] duration-300 data-[active]:scale-125 data-[active]:bg-white";
+const trackClass =
+  "flex snap-x snap-mandatory overflow-x-auto overscroll-x-contain [scrollbar-width:none] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-bark-600 [&::-webkit-scrollbar]:hidden";
+---
+
+<div data-gallery={multiple ? "" : undefined} data-lightbox-for={lightboxId} class="group/gallery relative">
+  <div
+    data-gallery-track
+    role={multiple ? "region" : undefined}
+    aria-roledescription={multiple ? "carousel" : undefined}
+    aria-label={multiple ? `${label}, ${slides.length} pictures` : undefined}
+    tabindex={multiple ? 0 : undefined}
+    class={trackClass}
+  >
+    {
+      slides.map((slide, i) => {
+        const picture = (
+          <Image
+            src={slide.image}
+            alt={slide.alt}
+            width={width}
+            height={height}
+            widths={widths}
+            sizes={sizes}
+            loading={priority && i === 0 ? "eager" : "lazy"}
+            fetchpriority={priority && i === 0 ? "high" : undefined}
+            decoding="async"
+            class="h-auto w-full object-cover"
+          />
+        );
+        return (
+          <div
+            role={multiple ? "group" : undefined}
+            aria-roledescription={multiple ? "slide" : undefined}
+            aria-label={multiple ? `${i + 1} of ${slides.length}` : undefined}
+            class="w-full flex-none snap-center snap-always"
+          >
+            {zoom ? (
+              <button
+                type="button"
+                data-zoom={i}
+                class="relative block w-full cursor-zoom-in focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-bark-600"
+              >
+                <span class="sr-only">Show picture {i + 1} full screen</span>
+                {picture}
+              </button>
+            ) : (
+              picture
+            )}
+          </div>
+        );
+      })
+    }
+  </div>
+  {
+    multiple && (
+      <>
+        <div aria-hidden="true" class={dotsClass}>
+          {slides.map((_, i) => (
+            <span data-dot data-active={i === 0 ? "" : undefined} class={dotClass} />
+          ))}
+        </div>
+        <button type="button" data-gallery-prev disabled aria-label="Previous picture" class:list={[arrow, "left-3"]}>
+          <svg class="size-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" aria-hidden="true">
+            <path d="M15 5l-7 7 7 7" />
+          </svg>
+        </button>
+        <button type="button" data-gallery-next aria-label="Next picture" class:list={[arrow, "right-3"]}>
+          <svg class="size-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" aria-hidden="true">
+            <path d="M9 5l7 7-7 7" />
+          </svg>
+        </button>
+      </>
+    )
+  }
+</div>
+
+{
+  zoom && (
+    <dialog
+      id={lightboxId}
+      data-lightbox
+      aria-label={`${label}, pictures`}
+      class="m-0 h-dvh max-h-none w-screen max-w-none bg-wool-950 p-0 text-wool-50 backdrop:bg-wool-950"
+    >
+      <div data-gallery={multiple ? "" : undefined} class="group/gallery relative h-full">
+        <div data-gallery-track tabindex={multiple ? 0 : undefined} class:list={[trackClass, "h-full"]}>
+          {slides.map((slide, i) => (
+            <div
+              role={multiple ? "group" : undefined}
+              aria-roledescription={multiple ? "slide" : undefined}
+              aria-label={multiple ? `${i + 1} of ${slides.length}` : undefined}
+              class="flex h-full w-full flex-none snap-center snap-always items-center justify-center"
+            >
+              <Image
+                src={slide.image}
+                alt={slide.alt}
+                width={width}
+                height={height}
+                widths={[640, 1080, 1600, 2160].filter((w) => w < slide.image.width).concat(slide.image.width)}
+                sizes={`min(100vw, ${Math.round((100 * slide.image.width) / slide.image.height)}dvh)`}
+                loading="lazy"
+                decoding="async"
+                class="max-h-full w-auto max-w-full object-contain"
+              />
+            </div>
+          ))}
+        </div>
+        {multiple && (
+          <>
+            <p data-counter aria-live="polite" class="absolute top-4 left-5 text-sm tabular-nums">
+              1 / {slides.length}
+            </p>
+            <div aria-hidden="true" class={dotsClass}>
+              {slides.map((_, i) => (
+                <span data-dot data-active={i === 0 ? "" : undefined} class={dotClass} />
+              ))}
+            </div>
+            <button type="button" data-gallery-prev disabled aria-label="Previous picture" class:list={[arrow, "left-3"]}>
+              <svg class="size-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" aria-hidden="true">
+                <path d="M15 5l-7 7 7 7" />
+              </svg>
+            </button>
+            <button type="button" data-gallery-next aria-label="Next picture" class:list={[arrow, "right-3"]}>
+              <svg class="size-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" aria-hidden="true">
+                <path d="M9 5l7 7-7 7" />
+              </svg>
+            </button>
+          </>
+        )}
+        <form method="dialog" class="absolute top-2 right-2">
+          <button
+            aria-label="Close"
+            class="flex size-11 cursor-pointer items-center justify-center drop-shadow-[0_0_3px_rgb(0_0_0/0.55)] focus-visible:outline-2 focus-visible:outline-bark-600"
+          >
+            <svg class="size-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" aria-hidden="true">
+              <path d="M6 6l12 12M18 6L6 18" />
+            </svg>
+          </button>
+        </form>
+      </div>
+    </dialog>
+  )
+}
+
+<script>
+  // Swiping itself is native scroll snapping; this only lights the dot for the current picture, shows the dots while
+  // swiping, drives the desktop arrow buttons and opens the full-screen gallery at the tapped picture.
+  const reduceMotion = matchMedia("(prefers-reduced-motion: reduce)");
+
+  const setUp = (gallery: HTMLElement) => {
+    const track = gallery.querySelector<HTMLElement>("[data-gallery-track]")!;
+    const dots = [...gallery.querySelectorAll<HTMLElement>("[data-dot]")];
+    const prev = gallery.querySelector<HTMLButtonElement>("[data-gallery-prev]")!;
+    const next = gallery.querySelector<HTMLButtonElement>("[data-gallery-next]")!;
+    const counter = gallery.querySelector<HTMLElement>("[data-counter]");
+    let current = 0;
+    // Picture an arrow click is heading to while its smooth scroll runs, so quick repeated clicks keep stepping.
+    let target = -1;
+    let hideDots = 0;
+    let settle = 0;
+
+    const update = () => {
+      const i = Math.max(0, Math.min(dots.length - 1, Math.round(track.scrollLeft / track.clientWidth)));
+      if (i === current) return;
+      current = i;
+      dots.forEach((dot, k) => dot.toggleAttribute("data-active", k === i));
+      prev.disabled = i === 0;
+      next.disabled = i === dots.length - 1;
+      if (counter) counter.textContent = `${i + 1} / ${dots.length}`;
+    };
+
+    track.addEventListener(
+      "scroll",
+      () => {
+        gallery.toggleAttribute("data-swiping", true);
+        update();
+        clearTimeout(hideDots);
+        hideDots = window.setTimeout(() => gallery.removeAttribute("data-swiping"), 1500);
+        clearTimeout(settle);
+        settle = window.setTimeout(() => (target = -1), 150);
+      },
+      { passive: true },
+    );
+
+    const go = (step: number) => {
+      target = Math.max(0, Math.min(dots.length - 1, (target < 0 ? current : target) + step));
+      track.scrollTo({ left: target * track.clientWidth, behavior: reduceMotion.matches ? "instant" : "smooth" });
+    };
+    prev.addEventListener("click", () => go(-1));
+    next.addEventListener("click", () => go(1));
+  };
+  document.querySelectorAll<HTMLElement>("[data-gallery]").forEach(setUp);
+
+  /** Shows picture i of a carousel without animating. */
+  const jump = (track: HTMLElement, i: number) => track.scrollTo({ left: i * track.clientWidth, behavior: "instant" });
+
+  for (const inline of document.querySelectorAll<HTMLElement>("[data-lightbox-for]")) {
+    const dialog = document.getElementById(inline.dataset.lightboxFor ?? "");
+    if (!(dialog instanceof HTMLDialogElement)) continue;
+    const big = dialog.querySelector<HTMLElement>("[data-gallery-track]")!;
+    const small = inline.querySelector<HTMLElement>("[data-gallery-track]")!;
+    // Read while the gallery is showing: a closed dialog reports no scroll position.
+    let shown = 0;
+    big.addEventListener("scroll", () => (shown = Math.round(big.scrollLeft / big.clientWidth)), { passive: true });
+    inline.addEventListener("click", (e) => {
+      const button = (e.target as Element).closest<HTMLElement>("[data-zoom]");
+      if (!button) return;
+      shown = Number(button.dataset.zoom);
+      dialog.showModal();
+      jump(big, shown);
+    });
+    // Closing leaves the page's carousel on the picture last looked at.
+    dialog.addEventListener("close", () => jump(small, shown));
+  }
+</script>
