@@ -196,12 +196,8 @@ const ballScale = s.ballRadius / 13;
         html.classList.add("theme-fade");
         window.setTimeout(() => html.classList.remove("theme-fade"), 450);
       }
+      // Not remembered: every page load starts with the lights off.
       html.classList.toggle("dark", dark);
-      try {
-        localStorage.setItem("theme", dark ? "dark" : "light");
-      } catch {
-        // Storage can be unavailable (private mode); the toggle still works for this visit.
-      }
       themeMeta?.setAttribute("content", dark ? "#171514" : "#faf8f4");
       syncLabel();
     };
@@ -503,20 +499,6 @@ const ballScale = s.ballRadius / 13;
       if (e.pointerType === "mouse" && pointerId === null && !reduceMotion.matches) {
         rope.impulse(s.hoverNudge, 0);
         wake();
-      }
-    });
-
-    // Follow OS theme changes until the visitor has made an explicit choice.
-    matchMedia("(prefers-color-scheme: dark)").addEventListener("change", (e) => {
-      let stored: string | null = null;
-      try {
-        stored = localStorage.getItem("theme");
-      } catch {
-        stored = null;
-      }
-      if (stored === null && e.matches !== isDark()) {
-        html.classList.toggle("dark", e.matches);
-        syncLabel();
       }
     });
 
