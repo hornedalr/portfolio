@@ -5,9 +5,8 @@ import cordPlayground from "./integrations/cord-playground.mjs";
 import designEditor from "./integrations/design-editor.mjs";
 
 export default defineConfig({
-  // Published on GitHub Pages, from the repository's sub-folder.
-  site: "https://hornedalr.github.io",
-  base: "/portfolio/",
+  // Published on GitHub Pages at the root of larabraun.github.io.
+  site: "https://larabraun.github.io",
   output: "static",
   integrations: [cordPlayground(), designEditor()],
   build: {
