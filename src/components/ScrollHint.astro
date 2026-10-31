@@ -3,10 +3,13 @@
 ---
 
 <script>
-  // Nudges the page towards the works below: one soft swell down and back up. Plays once per page load, only
-  // after the lights have been switched HINT_AFTER_TOGGLES times.
+  // Nudges the page towards the works below: eases down until the works heading peeks in, then back up. Plays once
+  // per page load, only after the lights have been switched HINT_AFTER_TOGGLES times.
   const HINT_AFTER_TOGGLES = 3;
-  const DURATION_MS = 2600;
+  // Down, a short look at the works heading, back up.
+  const DOWN_MS = 1100;
+  const HOLD_MS = 450;
+  const UP_MS = 1200;
   const html = document.documentElement;
   const reduceMotion = matchMedia("(prefers-reduced-motion: reduce)");
 
@@ -20,15 +23,18 @@
     clearTimeout(wait);
     observer.disconnect();
   };
-  // 0 → 1 → 0 with no jolt at either end or at the turn: a raised cosine.
-  const swell = (t: number) => (1 - Math.cos(2 * Math.PI * t)) / 2;
+  // Sine ease in and out: starts and stops without a jolt.
+  const ease = (t: number) => (1 - Math.cos(Math.PI * t)) / 2;
   const scrollTo = (top: number) => window.scrollTo({ top, behavior: "instant" });
 
   const hint = () => {
     if (done) return;
     finish();
     if (reduceMotion.matches || window.scrollY > 40) return;
-    const depth = Math.min(110, innerHeight * 0.13);
+    // Far enough that the "Selected works" heading comes into view, so it's clear there's more below.
+    const heading = document.querySelector("#work-heading");
+    const reveal = heading ? heading.getBoundingClientRect().bottom - innerHeight + 24 : 0;
+    const depth = Math.max(80, Math.min(reveal, innerHeight * 0.4));
     // Any touch, wheel or key hands control back to the visitor straight away.
     let stopped = false;
     const stop = () => (stopped = true);
@@ -37,9 +43,10 @@
     const start = performance.now();
     const step = (now: number) => {
       if (stopped) return;
-      const t = Math.min(1, (now - start) / DURATION_MS);
-      scrollTo(depth * swell(t));
-      if (t < 1) requestAnimationFrame(step);
+      const ms = now - start;
+      const k = ms < DOWN_MS ? ease(ms / DOWN_MS) : ms < DOWN_MS + HOLD_MS ? 1 : ease(1 - Math.min(1, (ms - DOWN_MS - HOLD_MS) / UP_MS));
+      scrollTo(depth * k);
+      if (ms < DOWN_MS + HOLD_MS + UP_MS) requestAnimationFrame(step);
       else events.forEach((e) => removeEventListener(e, stop));
     };
     requestAnimationFrame(step);
