@@ -2,7 +2,7 @@
 import { profile } from "../data/site";
 
 // Opened by any button with popovertarget="contact-form": the native Popover API, so no JavaScript is needed.
-// Netlify Forms picks up the form at deploy time (data-netlify) and stores the messages it receives.
+// Send hands the message to the visitor's email app, addressed to me (the site is static, so there's no server to send it).
 const label = "block text-xs font-semibold tracking-wide text-wool-700 uppercase dark:text-wool-300";
 const field =
   "mt-1.5 block w-full border border-wool-300 bg-white px-3 py-2.5 text-base text-wool-900 outline-none focus:border-bark-600 dark:border-wool-700 dark:bg-wool-900 dark:text-wool-100 dark:focus:border-bark-300";
@@ -30,18 +30,10 @@ const field =
     </button>
   </div>
 
-  <form name="contact" method="POST" action="/thanks/" data-netlify="true" netlify-honeypot="bot-field" class="space-y-5 px-5 py-6">
-    <input type="hidden" name="form-name" value="contact" />
-    <p class="hidden">
-      <label>Leave this empty <input name="bot-field" tabindex="-1" autocomplete="off" /></label>
-    </p>
+  <form data-contact-form action={`mailto:${profile.email}`} method="get" class="space-y-5 px-5 py-6">
     <div>
       <label for="cf-name" class={label}>Name</label>
       <input id="cf-name" name="name" required autocomplete="name" class={field} />
-    </div>
-    <div>
-      <label for="cf-email" class={label}>Email</label>
-      <input id="cf-email" name="email" type="email" required autocomplete="email" class={field} />
     </div>
     <div>
       <label for="cf-title" class={label}>Title</label>
@@ -57,8 +49,22 @@ const field =
     >
       Send
     </button>
+    <p class="-mt-2 text-center text-xs text-wool-600 dark:text-wool-400">Opens your email app with the message ready to send.</p>
     <p class="text-center text-sm text-wool-600 dark:text-wool-400">
       Or write to <a href={`mailto:${profile.email}`} class="underline underline-offset-4">{profile.email}</a>
     </p>
   </form>
 </div>
+
+<script>
+  // Turns the fields into an email: the title as its subject, the message and name as its text.
+  for (const form of document.querySelectorAll<HTMLFormElement>("[data-contact-form]")) {
+    form.addEventListener("submit", (e) => {
+      e.preventDefault();
+      const data = new FormData(form);
+      const subject = encodeURIComponent(String(data.get("title")));
+      const body = encodeURIComponent(`${data.get("message")}\n\n${data.get("name")}`);
+      location.href = `${form.action}?subject=${subject}&body=${body}`;
+    });
+  }
+</script>
