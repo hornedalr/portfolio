@@ -132,6 +132,9 @@ export const projects: Project[] = [
 ];
 
 /** URL-safe id fragment, e.g. "nära Grannar" -> "nara-grannar". */
+/** A link within the site, which is served from a sub-folder on GitHub Pages (e.g. url("/shop/") → "/portfolio/shop/"). */
+export const url = (path: string) => import.meta.env.BASE_URL.replace(/\/$/, "") + path;
+
 export const slug = (text: string) =>
   text
     .normalize("NFD")

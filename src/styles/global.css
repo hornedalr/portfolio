@@ -9,7 +9,7 @@
 /* Self-hosted script face for the site name (SIL OFL, see public/fonts/Sacramento-OFL.txt). */
 @font-face {
   font-family: "Sacramento";
-  src: url("/fonts/sacramento.woff2") format("woff2");
+  src: url("../assets/fonts/sacramento.woff2") format("woff2");
   font-weight: 400;
   font-display: swap;
 }

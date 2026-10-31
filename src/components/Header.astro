@@ -1,12 +1,12 @@
 ---
-import { profile } from "../data/site";
+import { profile, url } from "../data/site";
 
 const links = [
-  { href: "/#work", label: "Works" },
-  { href: "/#exhibitions", label: "Exhibitions" },
-  { href: "/shop/", label: "Shop" },
-  { href: "/#about", label: "About" },
-  { href: "/#contact", label: "Contact" },
+  { href: url("/#work"), label: "Works" },
+  { href: url("/#exhibitions"), label: "Exhibitions" },
+  { href: url("/shop/"), label: "Shop" },
+  { href: url("/#about"), label: "About" },
+  { href: url("/#contact"), label: "Contact" },
 ];
 const here = Astro.url.pathname.replace(/\/?$/, "/");
 const current = (href: string) => (href === here ? "page" : undefined);
@@ -19,7 +19,7 @@ const iconButton =
   class="sticky top-0 z-40 border-b border-wool-200/70 bg-wool-50/85 backdrop-blur transition-transform duration-300 data-[hidden]:-translate-y-full dark:border-wool-800/70 dark:bg-wool-950/85"
 >
   <nav aria-label="Primary" class="mx-auto flex max-w-5xl items-center justify-between gap-4 px-5 py-2">
-    <a href={here === "/" ? "#" : "/"} class="font-script text-4xl leading-none sm:text-5xl">{profile.name}</a>
+    <a href={here === url("/") ? "#" : url("/")} class="font-script text-4xl leading-none sm:text-5xl">{profile.name}</a>
     <div class="-mr-2 flex items-center">
       <ul class="mr-2 hidden gap-2 text-sm font-medium md:flex">
         {

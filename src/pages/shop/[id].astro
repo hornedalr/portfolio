@@ -8,7 +8,7 @@ import Footer from "../../components/Footer.astro";
 import Carousel from "../../components/Carousel.astro";
 import AddToCart from "../../components/AddToCart.astro";
 import { formatPrice, products, type Product } from "../../data/shop";
-import { profile } from "../../data/site";
+import { profile, url } from "../../data/site";
 
 export function getStaticPaths() {
   return products.map((product) => ({ params: { id: product.id }, props: { product } }));
@@ -29,7 +29,7 @@ const kind = product.original ? "Original work" : "Lamp";
   <Search />
   <main id="main" class="mx-auto max-w-5xl px-5 py-8 sm:py-14">
     <a
-      href={`/shop/#${product.id}`}
+      href={url(`/shop/#${product.id}`)}
       class="inline-flex min-h-11 items-center gap-1.5 text-sm text-wool-600 hover:text-wool-900 focus-visible:outline-2 focus-visible:outline-bark-600 dark:text-wool-400 dark:hover:text-wool-100"
     >
       <svg class="size-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" aria-hidden="true">

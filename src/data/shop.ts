@@ -1,5 +1,6 @@
 // Shop catalogue. Prices are in Swedish kronor. Checkout is not connected yet.
 import type { ImageMetadata } from "astro";
+import { url } from "./site";
 import lamp1 from "../assets/shop/lamp-1.png";
 import lamp2 from "../assets/shop/lamp-2.png";
 import lamp3 from "../assets/shop/lamp-3.png";
@@ -73,6 +74,6 @@ export const lamps = lampListings.map(withPage);
 export const originals = originalListings.map(withPage);
 export const products = [...lamps, ...originals];
 
-export const productHref = (product: Product) => `/shop/${product.id}/`;
+export const productHref = (product: Product) => url(`/shop/${product.id}/`);
 
 export const formatPrice = (kr: number) => `${new Intl.NumberFormat("sv-SE").format(kr)} kr`;

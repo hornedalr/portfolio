@@ -1,6 +1,8 @@
 ---
 import "../styles/global.css";
 import { cordSettings } from "../scripts/cord-settings";
+import { url } from "../data/site";
+import fontUrl from "../assets/fonts/sacramento.woff2?url";
 
 interface Props {
   title: string;
@@ -17,8 +19,8 @@ const { title, description } = Astro.props;
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta name="description" content={description} />
     <meta name="theme-color" content="#faf8f4" />
-    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
-    <link rel="preload" href="/fonts/sacramento.woff2" as="font" type="font/woff2" crossorigin />
+    <link rel="icon" type="image/svg+xml" href={url("/favicon.svg")} />
+    <link rel="preload" href={fontUrl} as="font" type="font/woff2" crossorigin />
     <meta property="og:title" content={title} />
     <meta property="og:description" content={description} />
     <meta property="og:type" content="website" />
