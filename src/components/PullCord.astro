@@ -142,6 +142,7 @@ const ballScale = s.ballRadius / 13;
 <script>
   import { Rope } from "../scripts/rope";
   import { cordSettings, type CordSettings } from "../scripts/cord-settings";
+  import { paddlePose } from "../scripts/sheep-paddle";
 
   const TAP_SLOP = 6;
   const STEP_MS = 1000 / 60;
@@ -253,22 +254,35 @@ const ballScale = s.ballRadius / 13;
           leg.bendV = 0;
         }
       }
+      // Pulled all the way out, the sheep paddles its legs as if trying to reach the ground. It eases in and out
+      // over a few frames, on top of the swinging above.
+      const paddling = rope.isDragging && !reduceMotion.matches && rope.stretch >= s.paddleAt * s.maxStretch;
+      paddle += ((paddling ? 1 : 0) - paddle) * 0.12;
+      if (paddle < 0.002 && !paddling) paddle = paddleCycle = 0;
+      else paddleCycle = (paddleCycle + (s.paddleSpeed * STEP_MS) / 1000) % 1;
     };
-    const legsMoving = () => legs.some((l) => Math.abs(l.hipV) > 0.02 || Math.abs(l.bendV) > 0.02 || Math.abs(l.hip) > 0.3);
+    let paddle = 0;
+    let paddleCycle = 0;
+    const legsMoving = () => paddle > 0 || legs.some((l) => Math.abs(l.hipV) > 0.02 || Math.abs(l.bendV) > 0.02 || Math.abs(l.hip) > 0.3);
     const resetLegs = () => {
       prevX = rope.handleX;
       prevY = rope.handleY;
       prevVX = prevVY = 0;
+      paddle = paddleCycle = 0;
       for (const leg of legs) {
         leg.hip = leg.hipV = leg.bendV = 0;
         leg.bend = KNEE_REST;
       }
     };
     const renderLegs = () => {
-      for (const leg of legs) {
-        leg.el.setAttribute("transform", `translate(${leg.x} ${leg.y}) rotate(${leg.hip.toFixed(2)})`);
-        leg.knee.setAttribute("transform", `translate(0 30) rotate(${(leg.sign * leg.bend).toFixed(2)})`);
-      }
+      legs.forEach((leg, n) => {
+        const p = paddlePose(paddleCycle, n, { swing: s.paddleSwing, lift: s.paddleLift });
+        const hip = leg.hip + paddle * p.hip;
+        // Paddling folds every lower leg back under the sheep, front and hind alike.
+        const bend = leg.sign * leg.bend + paddle * p.bend;
+        leg.el.setAttribute("transform", `translate(${leg.x} ${leg.y}) rotate(${hip.toFixed(2)})`);
+        leg.knee.setAttribute("transform", `translate(0 30) rotate(${bend.toFixed(2)})`);
+      });
     };
 
     // The sheep lifts its head and baas; a thought bubble floats next to its head for 2s.
@@ -337,7 +351,7 @@ const ballScale = s.ballRadius / 13;
       ballAngle = angle;
       ballEl.setAttribute(
         "transform",
-        `translate(${hx.toFixed(1)} ${hy.toFixed(1)}) rotate(${angle.toFixed(1)}) scale(${(s.ballRadius / 13).toFixed(3)})`,
+        `translate(${hx.toFixed(1)} ${hy.toFixed(1)}) rotate(${(angle - paddle * s.paddleLean).toFixed(1)}) scale(${(s.ballRadius / 13).toFixed(3)})`,
       );
       handle.style.transform = `translate(${(hx - 22).toFixed(1)}px, ${(hy - 22).toFixed(1)}px)`;
       renderLegs();

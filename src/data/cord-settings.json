@@ -19,5 +19,10 @@
   "swingGrab": 27,
   "introAngle": -130,
   "introStretch": 0,
-  "introDelay": 250
+  "introDelay": 250,
+  "paddleSpeed": 5,
+  "paddleSwing": 1,
+  "paddleLift": 35,
+  "paddleAt": 0.85,
+  "paddleLean": 3.5
 }

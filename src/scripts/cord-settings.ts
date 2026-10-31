@@ -24,6 +24,16 @@ export interface CordSettings extends RopePhysics {
   introStretch: number;
   /** Delay (ms) after load before the intro swing starts. */
   introDelay: number;
+  /** Sheep leg-paddling cycles per second while the cord is pulled all the way out. */
+  paddleSpeed: number;
+  /** How far each leg swings forward and back while paddling (degrees). */
+  paddleSwing: number;
+  /** Extra knee bend as a leg swings forward while paddling (degrees). */
+  paddleLift: number;
+  /** Share of maxStretch where the paddling starts. */
+  paddleAt: number;
+  /** How far the sheep tips its head down while paddling (degrees). */
+  paddleLean: number;
 }
 
 export const DEFAULT_SETTINGS: CordSettings = {
@@ -40,6 +50,11 @@ export const DEFAULT_SETTINGS: CordSettings = {
   introAngle: -85,
   introStretch: 0,
   introDelay: 250,
+  paddleSpeed: 2.5,
+  paddleSwing: 22,
+  paddleLift: 26,
+  paddleAt: 0.85,
+  paddleLean: 3.5,
 };
 
 /** Merges untrusted values over defaults, keeping only known numeric keys. */
