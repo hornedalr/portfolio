@@ -4,10 +4,13 @@ import HeroLamps from "./HeroLamps.astro";
 import PullCord from "./PullCord.astro";
 import ScrollHint from "./ScrollHint.astro";
 
-// A full screen with just the sheep on its cord among sketched lamps, so the works only appear once you scroll.
+// A full screen with just the sheep on its cord among sketched lamps, so the works only appear once you scroll. It ends at
+// the bottom of the screen (below the header, with the browser's toolbars showing), where the lamps' floor meets the works.
+// Only the top and sides are cut off (the pendant cords run up out of the picture); the lamps' glow spills down over the
+// start of the works, so the two read as one picture.
 ---
 
-<section data-hero aria-labelledby="hero-heading" class="relative h-svh overflow-clip">
+<section data-hero aria-labelledby="hero-heading" class="relative z-10 h-[calc(100svh-var(--header-h))] overflow-x-clip [clip-path:inset(0_0_-100vh_0)]">
   <HeroLamps />
   <PullCord class="top-0 left-1/2 -translate-x-1/2" />
   <ScrollHint />

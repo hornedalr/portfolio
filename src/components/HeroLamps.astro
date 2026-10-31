@@ -10,16 +10,19 @@ import layout from "./hero-lamps.json";
 
 const files = import.meta.glob<{ default: ImageMetadata }>("../assets/lamps/*.svg", { eager: true });
 const image = (name: string) => files[`../assets/lamps/${name}.svg`].default;
+// The floor line sits 24 units above the bottom of each 470-unit-tall drawing; shifting the drawing down by that much
+// (5.106%), less a few pixels, puts the floor just above the bottom edge of the hero, where the works' background begins.
+// The glow below the floor hangs over that edge.
 const sets = [
   { drawing: layout.phone, class: "lamps-phone max-w-md" },
   { drawing: layout.desktop, class: "lamps-wide" },
 ];
 ---
 
-<div class="pointer-events-none absolute inset-x-0 bottom-[4.75rem]" aria-hidden="true">
+<div class="pointer-events-none absolute inset-x-0 bottom-0" aria-hidden="true">
   {
     sets.map(({ drawing, class: cls }) => (
-      <div class:list={["lamps relative mx-auto w-full", cls]} style={`aspect-ratio:${drawing.width}/${drawing.height}`}>
+      <div class:list={["lamps relative mx-auto w-full translate-y-[calc(5.106%-0.25rem)]", cls]} style={`aspect-ratio:${drawing.width}/${drawing.height}`}>
         {drawing.lamps.map((lamp) => {
           const off = image(lamp.name);
           const on = image(`${lamp.name}-on`);

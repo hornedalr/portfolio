@@ -46,10 +46,23 @@
   html {
     scroll-behavior: smooth;
     color-scheme: light;
+    /* Height of the sticky site header, so the hero can end exactly at the bottom of the screen. */
+    --header-h: 3.8125rem;
+  }
+
+  @media (min-width: 40rem) {
+    html {
+      --header-h: 4.0625rem;
+    }
   }
 
   html.dark {
     color-scheme: dark;
+  }
+
+  /* The page stays put behind the full-screen picture gallery. */
+  html:has(dialog[data-lightbox][open]) {
+    overflow: hidden;
   }
 
   /* Applied briefly by the pull cord so the theme swap fades instead of flashing. */

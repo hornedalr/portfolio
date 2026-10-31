@@ -19,7 +19,13 @@ import { profile, projects } from "../data/site";
   <main id="main">
     <Hero />
 
-    <section id="work" aria-labelledby="work-heading" class="scroll-mt-16 bg-wool-100 py-16 sm:py-24 dark:bg-wool-900/50">
+    <!-- The hero ends a header-height higher than the fold, so the works start right under the lamps; the extra top
+      padding keeps the heading where it was. -->
+    <section
+      id="work"
+      aria-labelledby="work-heading"
+      class="scroll-mt-[calc(4rem-var(--header-h))] bg-wool-100 pt-[calc(4rem+var(--header-h))] pb-16 sm:pt-[calc(6rem+var(--header-h))] sm:pb-24 dark:bg-wool-900/50"
+    >
       <div class="mx-auto max-w-[100rem] px-5 lg:px-12">
         <h2 id="work-heading" class="text-3xl font-bold tracking-wide uppercase">Selected works</h2>
         <p class="mt-2 text-wool-600 dark:text-wool-400">A few projects I've designed and built recently.</p>
@@ -84,4 +90,13 @@ import { profile, projects } from "../data/site";
   </main>
 
   <Footer />
+  <script is:inline>
+    // Reloading the home page always starts at the top, with the sheep, even if it was scrolled or opened at a section.
+    history.scrollRestoration = "manual";
+    if (performance.getEntriesByType("navigation")[0]?.type === "reload") {
+      if (location.hash) history.replaceState(null, "", location.pathname + location.search);
+      scrollTo(0, 0);
+      addEventListener("load", () => scrollTo(0, 0), { once: true });
+    }
+  </script>
 </BaseLayout>

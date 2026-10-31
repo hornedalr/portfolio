@@ -172,8 +172,9 @@ const shade = (cx, cy, rx, ry, opts, extra = {}, rayArc = [-Math.PI, 0]) => {
   const d = curve(pts, true);
   const floorY = extra.floorY ?? FLOOR;
   const hx = rx * 2.4, hy = Math.min(ry * 1.9, ry + 90);
-  // The rough filter grows the halo by up to 20% plus its displacement.
-  box = [cx - Math.max(hx * 1.2 + 14, rx + 52), cy - Math.max(hy * 1.2 + 14, ry + 30), cx + Math.max(hx * 1.2 + 14, rx + 52), FLOOR + 12];
+  // The rough filter grows the halo by up to 20% plus its displacement. The glow is kept whole below the floor too, so it
+  // spills softly over the edge of the hero instead of stopping in a straight line.
+  box = [cx - Math.max(hx * 1.2 + 14, rx + 52), cy - Math.max(hy * 1.2 + 14, ry + 30), cx + Math.max(hx * 1.2 + 14, rx + 52), Math.max(FLOOR + 12, cy + hy * 1.2 + 14)];
   // The lit lamps used to be hatched with scribbles. They're filled now, but the scribbles are still generated
   // (and thrown away) so the random sequence, and with it every lamp's unlit sketch, stays exactly the same.
   scribble(cx - rx, cy - ry, rx * 2, ry * 2, Math.max(7, Math.min(ry / 5, 12)), 0.45);
@@ -209,12 +210,14 @@ const kinds = {
     // Its old floor stand is still generated and dropped, so the other lamps keep their exact wobble.
     sketch(line(x, up(396, s), x - 3, FLOOR - 4, 10, 1), false) + sketch(blob(x - 3, FLOOR - 3, 22 * s, 5, { bumps: 3, rough: 0.05, n: 14 }), true);
     const cy = up(352, s), ry = 46 * s;
-    hang = [x, cy - ry * 0.85];
+    // The cord runs down to the middle of the shade, which hides its end, so it can never fall short.
+    hang = [x, cy];
     return shade(x, cy, 56 * s, ry, { bumps: 4, rough: 0.13 }, {}, [Math.PI * 0.05, Math.PI * 0.95]);
   },  // A pendant hanging at its own height: cy is the middle of the shade (the first pendants hang at 352).
   pendant: (x, s = 1, cy = 352) => {
     const ry = 46 * s;
-    hang = [x, cy - ry * 0.85];
+    // The cord runs down to the middle of the shade, which hides its end, so it can never fall short.
+    hang = [x, cy];
     return shade(x, cy, 56 * s, ry, { bumps: 4, rough: 0.13 }, {}, [Math.PI * 0.05, Math.PI * 0.95]);
   },
   tall: (x, s = 1) => shade(x, up(590, s), 32 * s, 86 * s, { bumps: 5, rough: 0.08, flat: true, square: 0.85 }, {}, [Math.PI * 0.9, Math.PI * 1.3]),
@@ -251,7 +254,7 @@ const defs = `<defs>
 const styles = {
   off: ".ln{stroke:#4f4a44;stroke-width:1.35}.ln2{stroke-width:.8;opacity:.55}.wisp{stroke-width:.9;opacity:.45}.floor{opacity:.35}.bg{fill:#faf8f4}",
   on:
-    ".ln{stroke:#4a3526;stroke-width:1.35}.ln2{stroke-width:.8;opacity:.55}.wisp{stroke-width:.9;opacity:.45}.sup,.floor{stroke:#c9a582}.floor{opacity:.25}.bg{fill:#3d2d26}" +
+    ".ln{stroke:#4a3526;stroke-width:1.35}.ln2{stroke-width:.8;opacity:.55}.wisp{stroke-width:.9;opacity:.45}.sup,.floor{stroke:#c9a582}.sup.pale{stroke:#cdc0b0}.floor{opacity:.25}.bg{fill:#3d2d26}" +
     ".blotch{fill:#1f1612}.fibre{fill:none;stroke:#1f1612;stroke-linecap:round}.mottle{fill:#4a2614;opacity:.55}",
 };
 const svg = (x0, y0, w, h, body, on) =>
@@ -288,7 +291,9 @@ const drawing = (prefix, W, lamps, { marbled = [], brown = [] } = {}) => {
     const [x0, y0, x1, y1] = box.map(Math.round);
     if (hang) {
       const [hx, hy] = hang;
-      const cord = withMarbleRandom(() => sketch(line(hx + r(-3, 3), CEILING, hx, hy, 14, 1.4), false)).replaceAll('class="ln', 'class="sup ln');
+      // Black and white lamps glow whiter, so their cords are a cooler, paler tan.
+      const cordClass = wool === "marbled" ? 'class="sup pale ln' : 'class="sup ln';
+      const cord = withMarbleRandom(() => sketch(line(hx + r(-3, 3), CEILING, hx, hy, 14, 1.4), false)).replaceAll('class="ln', cordClass);
       write(`${prefix}-${n}-cord`, hx - 10, CEILING, 20, hy - CEILING + 4, cord);
       out.push(place(`${prefix}-${n}-cord`, hx - 10, CEILING, 20, order, true));
     }
