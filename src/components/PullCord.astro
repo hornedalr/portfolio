@@ -63,7 +63,7 @@ const ballScale = s.ballRadius / 13;
       fill="none"
       stroke-width={s.cordWidth}
       stroke-linecap="round"
-      class="stroke-wool-600 transition-[stroke] duration-150 dark:stroke-wool-400"
+      class="stroke-wool-600 transition-[stroke] duration-150 dark:stroke-[#c9a582]"
     ></path>
     <g data-ball transform={`translate(${cx} ${ballY}) scale(${ballScale})`}>
       {
@@ -353,10 +353,12 @@ const ballScale = s.ballRadius / 13;
       const tension = Math.min(rope.stretch / Math.max(s.maxStretch, 1), 1);
       cord.setAttribute("stroke-width", Math.max(s.cordWidth - tension * s.tensionThinning, 0.5).toFixed(2));
       const nowArmed = rope.isDragging && rope.stretch >= s.trigger;
+      // With the lights on the cord matches the pendant lamps' cords, and darkens a little while it's being pulled.
+      cord.classList.toggle("dark:stroke-[#b08e6c]!", rope.isDragging && !nowArmed);
       if (nowArmed !== armed) {
         armed = nowArmed;
         cord.classList.toggle("stroke-bark-600!", armed);
-        cord.classList.toggle("dark:stroke-bark-300!", armed);
+        cord.classList.toggle("dark:stroke-[#93714f]!", armed);
         if (armed) haptic();
       }
       if (debug) {
