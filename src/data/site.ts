@@ -20,8 +20,8 @@ export const profile = {
   location: "Stockholm, Sweden",
   tagline: "I build fast, accessible interfaces that feel effortless to use.",
   bio: [
-    "I'm a developer with a background in design, focused on turning complex problems into simple, delightful web experiences.",
-    "I care about performance budgets, semantic HTML and inclusive design. When I'm not shipping UI, I'm prototyping small games or photographing city architecture.",
+    "text here",
+    "more text",
   ],
   portrait,
   portraitAlt: "Portrait of Lara Braun",
