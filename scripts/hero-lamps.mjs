@@ -164,6 +164,49 @@ const fibres = (cx, cy, rx, ry, density) =>
     }).join("");
   });
 
+let onDesktop = false;
+let lampKind = "";
+// Shafts use their own random sequence so they never change the pencil wobble.
+let shaftSeed = 991;
+const sr = (a, b) => a + ((shaftSeed = (shaftSeed * 48271) % 2147483647) / 2147483647) * (b - a);
+// Soft beams of light leaving the lamp: tapered wedges that fade out along their length, blurred. The hanging lamps
+// always get them, about a third of the others do on phones; they're fainter on desktop, where the row is busier. They
+// fade out just above the floor so they don't spill down into the works.
+const shafts = (cx, cy, hx, hy, id, white, dim) => {
+  const hanging = lampKind === "pendant" || lampKind === "floor";
+  const lucky = sr(0, 1) < (onDesktop ? 0 : 0.3) || hanging;
+  // The white pendant on phones keeps the beams it was first drawn with (down and to the right), from its own copy of
+  // the sequence; the shared one still moves on exactly as before so no other lamp changes.
+  const nShared = Math.round(sr(3, 6));
+  const classic = !onDesktop && white && hanging;
+  let seed = 991;
+  const rand = classic ? (a, b) => a + ((seed = (seed * 48271) % 2147483647) / 2147483647) * (b - a) : sr;
+  if (classic) for (let k = 0; k < nShared * 3; k++) sr(0, 1);
+  const n = classic ? Math.round(rand(3, 6)) : nShared;
+  const strength = (onDesktop ? 0.55 : 1) * (dim ? 0.6 : 1) * (classic ? 0.85 : 1);
+  const reach = Math.max(hx, hy) * 2.1;
+  const colour = white ? "#fff6e6" : dim ? "#e9a764" : "#ffcf87";
+  let svg = `<radialGradient id="${id}s" gradientUnits="userSpaceOnUse" cx="${f(cx)}" cy="${f(cy)}" r="${f(reach)}"><stop offset="0" stop-color="${colour}" stop-opacity="${(0.3 * strength).toFixed(3)}"/><stop offset=".35" stop-color="${colour}" stop-opacity="${(0.12 * strength).toFixed(3)}"/><stop offset="1" stop-color="${colour}" stop-opacity="0"/></radialGradient>`;
+  svg += `<g mask="url(#aboveFloor)"><g filter="url(#shaftBlur)" fill="url(#${id}s)">`;
+  for (let k = 0; k < n; k++) {
+    // Mostly sideways and downwards, where the shade's opening and gaps in the wool would let light out.
+    const a = rand(-0.25, 1.15) * Math.PI + (k / n) * 0.6;
+    const half = rand(0.07, 0.16);
+    const len = reach * rand(0.6, 1);
+    const p = (ang, d) => `${f(cx + Math.cos(ang) * d)} ${f(cy + Math.sin(ang) * d * (hy / hx) ** 0.5)}`;
+    svg += `<path d="M${p(a - half * 2.2, Math.min(hx, hy) * 0.35)} L${p(a - half, len)} Q${p(a, len * 1.06)} ${p(a + half, len)} L${p(a + half * 2.2, Math.min(hx, hy) * 0.35)}Z"/>`;
+  }
+  return lucky ? { svg: svg + "</g></g>", reach } : { svg: "", reach: 0 };
+};
+
+// A mask that fades a halo out towards its top along an uneven, wavy edge: a vertical gradient pushed about by noise.
+const frayTop = (id, cx, cy, hx, hy, ry) => {
+  const x = cx - hx * 1.6, y = cy - hy * 1.6, w = hx * 3.2, h = hy * 3.2;
+  return `<linearGradient id="${id}t" gradientUnits="userSpaceOnUse" x1="0" y1="${f(cy - hy * 1.05)}" x2="0" y2="${f(cy - ry * 0.4)}"><stop offset="0" stop-color="#000"/><stop offset=".55" stop-color="#8a8a8a"/><stop offset="1" stop-color="#fff"/></linearGradient>
+      <filter id="${id}r" filterUnits="userSpaceOnUse" x="${f(x)}" y="${f(y)}" width="${f(w)}" height="${f(h)}"><feTurbulence type="fractalNoise" baseFrequency=".022 .009" numOctaves="2" seed="11"/><feDisplacementMap in="SourceGraphic" scale="${f(hy * 0.9)}" xChannelSelector="R" yChannelSelector="G"/></filter>
+      <mask id="${id}m" maskUnits="userSpaceOnUse" x="${f(x)}" y="${f(y)}" width="${f(w)}" height="${f(h)}"><rect x="${f(x - 100)}" y="${f(y - 100)}" width="${f(w + 200)}" height="${f(h + 200)}" fill="url(#${id}t)" filter="url(#${id}r)"/></mask>`;
+};
+
 // A lamp: warm layer (glow, floor pool, glowing fill, rays) under the pencil outline and wisps. The warm layer is
 // wrapped in markers so the unlit image can leave it out.
 const shade = (cx, cy, rx, ry, opts, extra = {}, rayArc = [-Math.PI, 0]) => {
@@ -171,10 +214,17 @@ const shade = (cx, cy, rx, ry, opts, extra = {}, rayArc = [-Math.PI, 0]) => {
   const pts = blob(cx, cy, rx, ry, opts);
   const d = curve(pts, true);
   const floorY = extra.floorY ?? FLOOR;
-  const hx = rx * 2.4, hy = Math.min(ry * 1.9, ry + 90);
+  // The white pendants' halos are frayed at the top so they don't read as domes; on desktop it also glows a little less.
+  const ragged = wool === "marbled" && (lampKind === "pendant" || lampKind === "floor");
+  // The brown pendant on desktop glows dimmer and a deeper amber than the bright wool.
+  const dim = onDesktop && wool === "brown" && (lampKind === "pendant" || lampKind === "floor");
+  const grow = 1.35 * (ragged && onDesktop ? 0.88 : 1);
+  const hx = rx * 2.4 * grow, hy = Math.min(ry * 1.9, ry + 90) * grow;
+  const beams = shafts(cx, cy, hx, hy, id, wool === "marbled", dim);
   // The rough filter grows the halo by up to 20% plus its displacement. The glow is kept whole below the floor too, so it
   // spills softly over the edge of the hero instead of stopping in a straight line.
-  box = [cx - Math.max(hx * 1.2 + 14, rx + 52), cy - Math.max(hy * 1.2 + 14, ry + 30), cx + Math.max(hx * 1.2 + 14, rx + 52), Math.max(FLOOR + 12, cy + hy * 1.2 + 14)];
+  const ex = Math.max(hx * 1.2 + 14, rx + 52, beams.reach + 30), ey = Math.max(hy * 1.2 + 14, ry + 30, beams.reach + 30);
+  box = [cx - ex, cy - ey, cx + ex, Math.max(FLOOR + 12, cy + ey)];
   // The lit lamps used to be hatched with scribbles. They're filled now, but the scribbles are still generated
   // (and thrown away) so the random sequence, and with it every lamp's unlit sketch, stays exactly the same.
   scribble(cx - rx, cy - ry, rx * 2, ry * 2, Math.max(7, Math.min(ry / 5, 12)), 0.45);
@@ -192,7 +242,9 @@ const shade = (cx, cy, rx, ry, opts, extra = {}, rayArc = [-Math.PI, 0]) => {
     <clipPath id="${id}"><path d="${d}"/></clipPath>
     <path class="bg" d="${d}"/>
     <!--w--><g class="warm">
-      <ellipse cx="${f(cx)}" cy="${f(cy)}" rx="${f(hx)}" ry="${f(hy)}" fill="url(#${wool === "marbled" ? "haloWhite" : "halo"})" filter="url(#rough)"/>
+      ${beams.svg}
+      ${ragged ? frayTop(id, cx, cy, hx, hy, ry) : ""}
+      <ellipse cx="${f(cx)}" cy="${f(cy)}" rx="${f(hx)}" ry="${f(hy)}" fill="url(#${wool === "marbled" ? "haloWhite" : dim ? "haloDim" : "halo"})" filter="url(#rough)"${ragged ? ` mask="url(#${id}m)"` : ""}/>
       <ellipse cx="${f(cx)}" cy="${f(floorY)}" rx="${f(rx * 1.7)}" ry="8" fill="url(#pool)"/>
       ${fill}
     </g><!--/w-->
@@ -240,14 +292,18 @@ const kinds = {
 };
 
 const defs = `<defs>
-    <radialGradient id="halo"><stop offset="0" stop-color="#ffcf87" stop-opacity=".55"/><stop offset=".45" stop-color="#f0a250" stop-opacity=".2"/><stop offset="1" stop-color="#e08a3c" stop-opacity="0"/></radialGradient>
     <radialGradient id="inner" cx=".45" cy=".4" r=".7"><stop offset="0" stop-color="#fff4da"/><stop offset=".5" stop-color="#ffcf88"/><stop offset="1" stop-color="#d98a45"/></radialGradient>
     <radialGradient id="pale" cx=".45" cy=".4" r=".7"><stop offset="0" stop-color="#ffffff"/><stop offset=".6" stop-color="#fff8ec"/><stop offset="1" stop-color="#ecd3b4"/></radialGradient>
     <radialGradient id="brown" cx=".45" cy=".4" r=".7"><stop offset="0" stop-color="#ffcf8f"/><stop offset=".5" stop-color="#c97a3c"/><stop offset="1" stop-color="#6e3d1f"/></radialGradient>
     <filter id="felt" x="-10%" y="-10%" width="120%" height="120%"><feGaussianBlur stdDeviation="1.6"/></filter>
-    <radialGradient id="haloWhite"><stop offset="0" stop-color="#fffaf0" stop-opacity=".6"/><stop offset=".45" stop-color="#fbe9cc" stop-opacity=".22"/><stop offset="1" stop-color="#f2d9b4" stop-opacity="0"/></radialGradient>
     <radialGradient id="pool"><stop offset="0" stop-color="#ffcf87" stop-opacity=".55"/><stop offset="1" stop-color="#ffcf87" stop-opacity="0"/></radialGradient>
     <filter id="rough" x="-20%" y="-20%" width="140%" height="140%"><feTurbulence type="fractalNoise" baseFrequency=".03" numOctaves="2" seed="3"/><feDisplacementMap in="SourceGraphic" scale="26"/></filter>
+    <radialGradient id="halo"><stop offset="0" stop-color="#ffcf87" stop-opacity=".55"/><stop offset=".2" stop-color="#fbbd72" stop-opacity=".34"/><stop offset=".45" stop-color="#f0a250" stop-opacity=".14"/><stop offset=".72" stop-color="#e8954a" stop-opacity=".045"/><stop offset="1" stop-color="#e08a3c" stop-opacity="0"/></radialGradient>
+    <radialGradient id="haloWhite"><stop offset="0" stop-color="#fffaf0" stop-opacity=".6"/><stop offset=".2" stop-color="#fff2de" stop-opacity=".38"/><stop offset=".45" stop-color="#fbe9cc" stop-opacity=".15"/><stop offset=".72" stop-color="#f6dfbf" stop-opacity=".05"/><stop offset="1" stop-color="#f2d9b4" stop-opacity="0"/></radialGradient>
+    <radialGradient id="haloDim"><stop offset="0" stop-color="#f0b26a" stop-opacity=".4"/><stop offset=".2" stop-color="#d98f4c" stop-opacity=".24"/><stop offset=".45" stop-color="#c47a3a" stop-opacity=".1"/><stop offset=".72" stop-color="#b56e33" stop-opacity=".03"/><stop offset="1" stop-color="#a8642e" stop-opacity="0"/></radialGradient>
+    <linearGradient id="floorFade" gradientUnits="userSpaceOnUse" x1="0" y1="${FLOOR - 90}" x2="0" y2="${FLOOR}"><stop offset="0" stop-color="#fff"/><stop offset="1" stop-color="#000"/></linearGradient>
+    <mask id="aboveFloor" maskUnits="userSpaceOnUse" x="-3000" y="-3000" width="8000" height="8000"><rect x="-3000" y="-3000" width="8000" height="8000" fill="url(#floorFade)"/></mask>
+    <filter id="shaftBlur" x="-30%" y="-30%" width="160%" height="160%"><feGaussianBlur stdDeviation="7"/></filter>
   </defs>`;
 
 // Colours match the site theme: unlit lamps use the light theme, lit ones the dark theme.
@@ -279,6 +335,7 @@ const pct = (n) => +n.toFixed(3);
 // behind it. order (--i) = when it fades in: the sides first, then inward, so the U closes around the cord.
 // marbled / brown: indexes into lamps of the ones made of black and white, or brown, wool.
 const drawing = (prefix, W, lamps, { marbled = [], brown = [] } = {}) => {
+  onDesktop = prefix === "d";
   const top = H - VIEW;
   const place = (name, x0, y0, w, order, drop = false) => ({ name, order, drop, left: pct((x0 / W) * 100), top: pct(((y0 - top) / VIEW) * 100), width: pct((w / W) * 100) });
   const floor = sketch(line(8, FLOOR + 1, W - 8, FLOOR, Math.round(W / 28), 0.7), false).replaceAll('class="ln', 'class="floor ln');
@@ -287,6 +344,7 @@ const drawing = (prefix, W, lamps, { marbled = [], brown = [] } = {}) => {
   lamps.forEach(([kind, x, order, s, extra], n) => {
     wool = marbled.includes(n) ? "marbled" : brown.includes(n) ? "brown" : "plain";
     hang = null;
+    lampKind = kind;
     const body = kinds[kind](x, s, extra);
     const [x0, y0, x1, y1] = box.map(Math.round);
     if (hang) {

@@ -23,89 +23,89 @@
         "name": "m-0",
         "order": 0,
         "drop": true,
-        "left": -27.949,
-        "top": 0.638,
-        "width": 89.744
+        "left": -88.462,
+        "top": -61.489,
+        "width": 210.769
       },
       {
         "name": "m-1",
         "order": 0.35,
         "drop": false,
-        "left": -18.462,
-        "top": 31.915,
-        "width": 54.359
+        "left": -26.667,
+        "top": 17.234,
+        "width": 70.769
       },
       {
         "name": "m-2",
         "order": 0.6,
         "drop": false,
-        "left": -5.641,
-        "top": 59.787,
-        "width": 60.513
+        "left": -14.872,
+        "top": 51.915,
+        "width": 78.974
       },
       {
         "name": "m-3",
         "order": 0.85,
         "drop": false,
-        "left": -5.128,
-        "top": 80.213,
-        "width": 36.923
+        "left": -10.256,
+        "top": 77.447,
+        "width": 47.179
       },
       {
         "name": "m-4",
         "order": 0.2,
         "drop": false,
-        "left": 60.769,
-        "top": 12.553,
-        "width": 50.769
+        "left": 53.077,
+        "top": -6.17,
+        "width": 66.154
       },
       {
         "name": "m-5",
         "order": 0.45,
         "drop": false,
-        "left": 70.513,
-        "top": 71.489,
-        "width": 46.667
+        "left": 63.846,
+        "top": 66.596,
+        "width": 60
       },
       {
         "name": "m-6",
         "order": 0.6,
         "drop": false,
-        "left": 45.897,
-        "top": 42.553,
-        "width": 55.897
+        "left": 37.436,
+        "top": 30.851,
+        "width": 72.821
       },
       {
         "name": "m-7",
         "order": 0.85,
         "drop": false,
-        "left": 63.59,
-        "top": 79.787,
-        "width": 37.949
+        "left": 57.949,
+        "top": 76.596,
+        "width": 49.231
       },
       {
         "name": "m-8",
         "order": 1.3,
         "drop": false,
-        "left": 14.872,
-        "top": 54.894,
-        "width": 51.282
+        "left": -19.487,
+        "top": 25.532,
+        "width": 120
       },
       {
         "name": "m-9",
         "order": 1.7,
         "drop": false,
-        "left": 36.667,
-        "top": 70.426,
-        "width": 48.718
+        "left": 29.487,
+        "top": 65.319,
+        "width": 63.077
       },
       {
         "name": "m-10",
         "order": 2,
         "drop": false,
-        "left": 30.513,
-        "top": 80.851,
-        "width": 36.41
+        "left": 26.154,
+        "top": 78.085,
+        "width": 45.128
       },
       {
         "name": "m-11-cord",
@@ -119,9 +119,9 @@
         "name": "m-11",
         "order": 0.3,
         "drop": true,
-        "left": 57.949,
-        "top": 0.638,
-        "width": 58.462
+        "left": 18.974,
+        "top": -39.149,
+        "width": 136.41
       }
     ]
   },
@@ -149,17 +149,17 @@
         "name": "d-0",
         "order": 0,
         "drop": true,
-        "left": -9.083,
-        "top": 0.638,
-        "width": 29.167
+        "left": -28.75,
+        "top": -61.489,
+        "width": 68.5
       },
       {
         "name": "d-1",
         "order": 0,
         "drop": false,
-        "left": 85.083,
-        "top": -7.234,
-        "width": 21.5
+        "left": 81.667,
+        "top": -29.787,
+        "width": 28.333
       },
       {
         "name": "d-2-cord",
@@ -173,169 +173,169 @@
         "name": "d-2",
         "order": 0.6,
         "drop": true,
-        "left": 13.083,
-        "top": 18.936,
-        "width": 23.833
+        "left": -2.917,
+        "top": -31.489,
+        "width": 55.833
       },
       {
         "name": "d-3",
         "order": 0.6,
         "drop": false,
-        "left": 71.917,
-        "top": 14.043,
-        "width": 16.167
+        "left": 69.5,
+        "top": -4.468,
+        "width": 21
       },
       {
         "name": "d-4",
         "order": 0.4,
         "drop": false,
-        "left": 79.833,
-        "top": 34.894,
-        "width": 17
+        "left": 77.333,
+        "top": 21.064,
+        "width": 22
       },
       {
         "name": "d-5",
         "order": 1,
         "drop": false,
-        "left": 27.25,
-        "top": 46.809,
-        "width": 13.833
+        "left": 25.25,
+        "top": 35.957,
+        "width": 17.833
       },
       {
         "name": "d-6",
         "order": 0.35,
         "drop": false,
-        "left": -6,
-        "top": 31.915,
-        "width": 17.667
+        "left": -8.667,
+        "top": 17.234,
+        "width": 23
       },
       {
         "name": "d-7",
         "order": 0.6,
         "drop": false,
-        "left": -1.833,
-        "top": 59.787,
-        "width": 19.667
+        "left": -4.833,
+        "top": 51.915,
+        "width": 25.667
       },
       {
         "name": "d-8",
         "order": 0.85,
         "drop": false,
-        "left": -1.667,
-        "top": 80.213,
-        "width": 12
+        "left": -3.333,
+        "top": 77.447,
+        "width": 15.333
       },
       {
         "name": "d-9",
         "order": 0.5,
         "drop": false,
-        "left": 7.25,
-        "top": 42.553,
-        "width": 18.167
+        "left": 4.5,
+        "top": 30.851,
+        "width": 23.667
       },
       {
         "name": "d-10",
         "order": 0.8,
         "drop": false,
-        "left": 13.083,
-        "top": 70.426,
-        "width": 15.833
+        "left": 10.75,
+        "top": 65.319,
+        "width": 20.5
       },
       {
         "name": "d-11",
         "order": 1.1,
         "drop": false,
-        "left": 21,
-        "top": 54.894,
-        "width": 16.667
+        "left": 18.417,
+        "top": 48.723,
+        "width": 21.833
       },
       {
         "name": "d-12",
         "order": 1.2,
         "drop": false,
-        "left": 19,
-        "top": 80.213,
-        "width": 12
+        "left": 17.333,
+        "top": 77.447,
+        "width": 15.333
       },
       {
         "name": "d-13",
         "order": 1.5,
         "drop": false,
-        "left": 31.5,
-        "top": 67.872,
-        "width": 15.333
+        "left": 29.25,
+        "top": 61.915,
+        "width": 19.833
       },
       {
         "name": "d-14",
         "order": 1.9,
         "drop": false,
-        "left": 37.583,
-        "top": 74.681,
-        "width": 13.167
+        "left": 35.75,
+        "top": 70.638,
+        "width": 16.833
       },
       {
         "name": "d-15",
         "order": 0.6,
         "drop": false,
-        "left": 81.917,
-        "top": 42.553,
-        "width": 18.167
+        "left": 79.167,
+        "top": 30.851,
+        "width": 23.667
       },
       {
         "name": "d-16",
         "order": 0.85,
         "drop": false,
-        "left": 88.083,
-        "top": 76.809,
-        "width": 14.833
+        "left": 85.917,
+        "top": 72.979,
+        "width": 19.167
       },
       {
         "name": "d-17",
         "order": 0.8,
         "drop": false,
-        "left": 74.75,
-        "top": 62.979,
-        "width": 17.833
+        "left": 72,
+        "top": 55.957,
+        "width": 23.333
       },
       {
         "name": "d-18",
         "order": 1.1,
         "drop": false,
-        "left": 65.417,
-        "top": 50,
-        "width": 15.833
+        "left": 63.083,
+        "top": 40,
+        "width": 20.5
       },
       {
         "name": "d-19",
         "order": 1.5,
         "drop": false,
-        "left": 56.667,
-        "top": 54.894,
-        "width": 16.667
+        "left": 54.083,
+        "top": 48.723,
+        "width": 21.833
       },
       {
         "name": "d-20",
         "order": 1.8,
         "drop": false,
-        "left": 51.417,
-        "top": 73.617,
-        "width": 13.833
+        "left": 49.417,
+        "top": 69.149,
+        "width": 17.833
       },
       {
         "name": "d-21",
         "order": 2.1,
         "drop": false,
-        "left": 48.417,
-        "top": 80.851,
-        "width": 11.833
+        "left": 47,
+        "top": 78.085,
+        "width": 14.667
       },
       {
         "name": "d-22",
         "order": 1.3,
         "drop": false,
-        "left": 71.5,
-        "top": 80.213,
-        "width": 12
+        "left": 69.833,
+        "top": 77.447,
+        "width": 15.333
       },
       {
         "name": "d-23-cord",
@@ -349,9 +349,9 @@
         "name": "d-23",
         "order": 0.3,
         "drop": true,
-        "left": 61.75,
-        "top": -1.702,
-        "width": 26.5
+        "left": 47.333,
+        "top": -49.362,
+        "width": 55.333
       }
     ]
   }
