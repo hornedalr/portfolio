@@ -1,0 +1,358 @@
+{
+  "phone": {
+    "width": 390,
+    "height": 470,
+    "lamps": [
+      {
+        "name": "m-floor",
+        "order": 0,
+        "drop": false,
+        "left": 0,
+        "top": 93.617,
+        "width": 100
+      },
+      {
+        "name": "m-0-cord",
+        "order": 0,
+        "drop": true,
+        "left": 14.359,
+        "top": -197.872,
+        "width": 5.128
+      },
+      {
+        "name": "m-0",
+        "order": 0,
+        "drop": true,
+        "left": -27.949,
+        "top": 0.638,
+        "width": 89.744
+      },
+      {
+        "name": "m-1",
+        "order": 0.35,
+        "drop": false,
+        "left": -18.462,
+        "top": 31.915,
+        "width": 54.359
+      },
+      {
+        "name": "m-2",
+        "order": 0.6,
+        "drop": false,
+        "left": -5.641,
+        "top": 59.787,
+        "width": 60.513
+      },
+      {
+        "name": "m-3",
+        "order": 0.85,
+        "drop": false,
+        "left": -5.128,
+        "top": 80.213,
+        "width": 36.923
+      },
+      {
+        "name": "m-4",
+        "order": 0.2,
+        "drop": false,
+        "left": 60.769,
+        "top": 12.553,
+        "width": 50.769
+      },
+      {
+        "name": "m-5",
+        "order": 0.45,
+        "drop": false,
+        "left": 70.513,
+        "top": 71.489,
+        "width": 46.667
+      },
+      {
+        "name": "m-6",
+        "order": 0.6,
+        "drop": false,
+        "left": 45.897,
+        "top": 42.553,
+        "width": 55.897
+      },
+      {
+        "name": "m-7",
+        "order": 0.85,
+        "drop": false,
+        "left": 63.59,
+        "top": 79.787,
+        "width": 37.949
+      },
+      {
+        "name": "m-8",
+        "order": 1.3,
+        "drop": false,
+        "left": 14.872,
+        "top": 54.894,
+        "width": 51.282
+      },
+      {
+        "name": "m-9",
+        "order": 1.7,
+        "drop": false,
+        "left": 36.667,
+        "top": 70.426,
+        "width": 48.718
+      },
+      {
+        "name": "m-10",
+        "order": 2,
+        "drop": false,
+        "left": 30.513,
+        "top": 80.851,
+        "width": 36.41
+      },
+      {
+        "name": "m-11-cord",
+        "order": 0.3,
+        "drop": true,
+        "left": 84.615,
+        "top": -197.872,
+        "width": 5.128
+      },
+      {
+        "name": "m-11",
+        "order": 0.3,
+        "drop": true,
+        "left": 57.949,
+        "top": 0.638,
+        "width": 58.462
+      }
+    ]
+  },
+  "desktop": {
+    "width": 1200,
+    "height": 470,
+    "lamps": [
+      {
+        "name": "d-floor",
+        "order": 0,
+        "drop": false,
+        "left": 0,
+        "top": 93.617,
+        "width": 100
+      },
+      {
+        "name": "d-0-cord",
+        "order": 0,
+        "drop": true,
+        "left": 4.667,
+        "top": -197.872,
+        "width": 1.667
+      },
+      {
+        "name": "d-0",
+        "order": 0,
+        "drop": true,
+        "left": -9.083,
+        "top": 0.638,
+        "width": 29.167
+      },
+      {
+        "name": "d-1",
+        "order": 0,
+        "drop": false,
+        "left": 85.083,
+        "top": -7.234,
+        "width": 21.5
+      },
+      {
+        "name": "d-2-cord",
+        "order": 0.6,
+        "drop": true,
+        "left": 24.167,
+        "top": -197.872,
+        "width": 1.667
+      },
+      {
+        "name": "d-2",
+        "order": 0.6,
+        "drop": true,
+        "left": 13.083,
+        "top": 18.936,
+        "width": 23.833
+      },
+      {
+        "name": "d-3",
+        "order": 0.6,
+        "drop": false,
+        "left": 71.917,
+        "top": 14.043,
+        "width": 16.167
+      },
+      {
+        "name": "d-4",
+        "order": 0.4,
+        "drop": false,
+        "left": 79.833,
+        "top": 34.894,
+        "width": 17
+      },
+      {
+        "name": "d-5",
+        "order": 1,
+        "drop": false,
+        "left": 27.25,
+        "top": 46.809,
+        "width": 13.833
+      },
+      {
+        "name": "d-6",
+        "order": 0.35,
+        "drop": false,
+        "left": -6,
+        "top": 31.915,
+        "width": 17.667
+      },
+      {
+        "name": "d-7",
+        "order": 0.6,
+        "drop": false,
+        "left": -1.833,
+        "top": 59.787,
+        "width": 19.667
+      },
+      {
+        "name": "d-8",
+        "order": 0.85,
+        "drop": false,
+        "left": -1.667,
+        "top": 80.213,
+        "width": 12
+      },
+      {
+        "name": "d-9",
+        "order": 0.5,
+        "drop": false,
+        "left": 7.25,
+        "top": 42.553,
+        "width": 18.167
+      },
+      {
+        "name": "d-10",
+        "order": 0.8,
+        "drop": false,
+        "left": 13.083,
+        "top": 70.426,
+        "width": 15.833
+      },
+      {
+        "name": "d-11",
+        "order": 1.1,
+        "drop": false,
+        "left": 21,
+        "top": 54.894,
+        "width": 16.667
+      },
+      {
+        "name": "d-12",
+        "order": 1.2,
+        "drop": false,
+        "left": 19,
+        "top": 80.213,
+        "width": 12
+      },
+      {
+        "name": "d-13",
+        "order": 1.5,
+        "drop": false,
+        "left": 31.5,
+        "top": 67.872,
+        "width": 15.333
+      },
+      {
+        "name": "d-14",
+        "order": 1.9,
+        "drop": false,
+        "left": 37.583,
+        "top": 74.681,
+        "width": 13.167
+      },
+      {
+        "name": "d-15",
+        "order": 0.6,
+        "drop": false,
+        "left": 81.917,
+        "top": 42.553,
+        "width": 18.167
+      },
+      {
+        "name": "d-16",
+        "order": 0.85,
+        "drop": false,
+        "left": 88.083,
+        "top": 76.809,
+        "width": 14.833
+      },
+      {
+        "name": "d-17",
+        "order": 0.8,
+        "drop": false,
+        "left": 74.75,
+        "top": 62.979,
+        "width": 17.833
+      },
+      {
+        "name": "d-18",
+        "order": 1.1,
+        "drop": false,
+        "left": 65.417,
+        "top": 50,
+        "width": 15.833
+      },
+      {
+        "name": "d-19",
+        "order": 1.5,
+        "drop": false,
+        "left": 56.667,
+        "top": 54.894,
+        "width": 16.667
+      },
+      {
+        "name": "d-20",
+        "order": 1.8,
+        "drop": false,
+        "left": 51.417,
+        "top": 73.617,
+        "width": 13.833
+      },
+      {
+        "name": "d-21",
+        "order": 2.1,
+        "drop": false,
+        "left": 48.417,
+        "top": 80.851,
+        "width": 11.833
+      },
+      {
+        "name": "d-22",
+        "order": 1.3,
+        "drop": false,
+        "left": 71.5,
+        "top": 80.213,
+        "width": 12
+      },
+      {
+        "name": "d-23-cord",
+        "order": 0.3,
+        "drop": true,
+        "left": 74.167,
+        "top": -197.872,
+        "width": 1.667
+      },
+      {
+        "name": "d-23",
+        "order": 0.3,
+        "drop": true,
+        "left": 61.75,
+        "top": -1.702,
+        "width": 26.5
+      }
+    ]
+  }
+}
