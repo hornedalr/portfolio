@@ -57,6 +57,16 @@ const groups: { title: string; controls: Control[] }[] = [
     ],
   },
   {
+    title: "Sheep paddling",
+    controls: [
+      { key: "paddleSpeed", label: "Paddle speed", min: 0.5, max: 6, step: 0.1, hint: "Leg cycles per second while the cord is pulled all the way out." },
+      { key: "paddleSwing", label: "Leg swing", min: 0, max: 40, step: 1, hint: "How far each leg swings forward and back (degrees)." },
+      { key: "paddleLift", label: "Knee lift", min: 0, max: 45, step: 1, hint: "Extra knee bend as a leg swings forward (degrees)." },
+      { key: "paddleAt", label: "Starts at", min: 0.5, max: 0.99, step: 0.01, hint: "Share of the maximum stretch where the paddling starts." },
+      { key: "paddleLean", label: "Lean down", min: 0, max: 15, step: 0.5, hint: "How far the sheep tips its head down while paddling (degrees)." },
+    ],
+  },
+  {
     title: "Page-load intro",
     controls: [
       { key: "introAngle", label: "Start angle", min: -170, max: 170, step: 1, hint: "Where the ball swings in from, in degrees from hanging. Negative = left, 90 = level, 0 = no intro." },
@@ -138,10 +148,28 @@ const button =
         <p data-status class="w-full text-xs text-wool-600 dark:text-wool-400" aria-live="polite">Matches saved settings.</p>
       </div>
 
+      <div role="tablist" aria-label="Setting groups" class="-mt-2 flex flex-wrap gap-1 border-b border-wool-300 dark:border-wool-700">
+        {
+          groups.map((group, i) => (
+            <button
+              type="button"
+              role="tab"
+              id={`tab-${i}`}
+              data-tab={i}
+              aria-controls={`panel-${i}`}
+              aria-selected={i === 0 ? "true" : "false"}
+              tabindex={i === 0 ? 0 : -1}
+              class="-mb-px border border-transparent px-3 py-2 text-xs font-bold tracking-wide text-wool-600 uppercase hover:text-wool-900 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-bark-600 aria-selected:border-wool-300 aria-selected:border-b-wool-50 aria-selected:text-wool-900 dark:text-wool-400 dark:hover:text-wool-100 dark:aria-selected:border-wool-700 dark:aria-selected:border-b-wool-950 dark:aria-selected:text-wool-100"
+            >
+              {group.title}
+            </button>
+          ))
+        }
+      </div>
+
       {
-        groups.map((group) => (
-          <fieldset class="flex flex-col gap-4 border-t border-wool-300 pt-4 dark:border-wool-700">
-            <legend class="pr-2 text-sm font-bold tracking-wide text-wool-700 uppercase dark:text-wool-300">{group.title}</legend>
+        groups.map((group, i) => (
+          <div role="tabpanel" id={`panel-${i}`} data-panel-index={i} aria-labelledby={`tab-${i}`} hidden={i !== 0} class="flex flex-col gap-4">
             {group.controls.map((c) => (
               <div class="flex flex-col gap-1">
                 <div class="flex items-center justify-between gap-2">
@@ -170,7 +198,7 @@ const button =
                 <p class="text-xs text-wool-600 dark:text-wool-400">{c.hint}</p>
               </div>
             ))}
-          </fieldset>
+          </div>
         ))
       }
     </form>
@@ -221,6 +249,34 @@ const button =
   };
 
   for (const el of ranges) el.addEventListener("input", () => set(el.dataset.key as keyof CordSettings, el.valueAsNumber));
+
+  // Tabs: one group of settings at a time. Arrow keys move between tabs; the last one used is remembered.
+  const tabs = [...document.querySelectorAll<HTMLButtonElement>("[data-tab]")];
+  const panels = [...document.querySelectorAll<HTMLElement>("[data-panel-index]")];
+  const showTab = (i: number, focus = false) => {
+    tabs.forEach((t, n) => {
+      t.setAttribute("aria-selected", String(n === i));
+      t.tabIndex = n === i ? 0 : -1;
+    });
+    panels.forEach((p, n) => (p.hidden = n !== i));
+    if (focus) tabs[i].focus();
+    sessionStorage.setItem("playground-tab", String(i));
+  };
+  tabs.forEach((t, i) => {
+    t.addEventListener("click", () => showTab(i));
+    t.addEventListener("keydown", (e) => {
+      const step = e.key === "ArrowRight" ? 1 : e.key === "ArrowLeft" ? -1 : 0;
+      if (e.key === "Home" || e.key === "End") {
+        e.preventDefault();
+        showTab(e.key === "Home" ? 0 : tabs.length - 1, true);
+      } else if (step) {
+        e.preventDefault();
+        showTab((i + step + tabs.length) % tabs.length, true);
+      }
+    });
+  });
+  const lastTab = Number(sessionStorage.getItem("playground-tab"));
+  if (lastTab > 0 && lastTab < tabs.length) showTab(lastTab);
   for (const el of nums) {
     el.addEventListener("input", () => set(el.dataset.num as keyof CordSettings, el.valueAsNumber));
     el.addEventListener("change", fill);
