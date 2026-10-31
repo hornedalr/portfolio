@@ -1,0 +1,35 @@
+---
+// The shop's buy button (handled by Cart), or a Sold label for pieces that are gone.
+import type { Product } from "../data/shop";
+
+interface Props {
+  product: Product;
+  class?: string;
+}
+
+const { product, class: className } = Astro.props;
+---
+
+{
+  product.sold ? (
+    <p class:list={["inline-flex min-h-11 items-center justify-center border border-wool-300 px-3 text-sm font-medium text-wool-600 dark:border-wool-700 dark:text-wool-400", className]}>
+      Sold
+    </p>
+  ) : (
+    <button
+      type="button"
+      data-add-to-cart={product.id}
+      class:list={["group min-h-11 border border-wool-800 px-3 text-sm font-medium transition-colors hover:bg-wool-900 hover:text-wool-50 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-bark-600 disabled:cursor-default disabled:border-wool-300 disabled:text-wool-600 disabled:hover:bg-transparent data-[added]:border-bark-700 data-[added]:bg-bark-700 data-[added]:text-white dark:border-wool-300 dark:hover:bg-wool-100 dark:hover:text-wool-950 dark:disabled:border-wool-700 dark:disabled:text-wool-400 dark:disabled:hover:bg-transparent", className]}
+    >
+      <span class="group-data-[added]:hidden group-data-[in-cart]:hidden">
+        Add<span class="sr-only"> {product.title}</span> to cart
+      </span>
+      <span class="hidden group-data-[added]:inline" aria-hidden="true">
+        Added
+      </span>
+      <span class="hidden group-data-[in-cart]:inline">
+        In cart<span class="sr-only">: {product.title}</span>
+      </span>
+    </button>
+  )
+}

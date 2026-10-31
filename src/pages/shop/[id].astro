@@ -1,0 +1,67 @@
+---
+// One page per shop item: its pictures (swipe, tap for full screen), a few words about it and the buy button.
+import BaseLayout from "../../layouts/BaseLayout.astro";
+import Header from "../../components/Header.astro";
+import Cart from "../../components/Cart.astro";
+import Search from "../../components/Search.astro";
+import Footer from "../../components/Footer.astro";
+import Carousel from "../../components/Carousel.astro";
+import AddToCart from "../../components/AddToCart.astro";
+import { formatPrice, products, type Product } from "../../data/shop";
+import { profile } from "../../data/site";
+
+export function getStaticPaths() {
+  return products.map((product) => ({ params: { id: product.id }, props: { product } }));
+}
+
+interface Props {
+  product: Product;
+}
+
+const { product } = Astro.props;
+const slides = [{ image: product.image, alt: product.alt }, ...product.gallery];
+const kind = product.original ? "Original work" : "Lamp";
+---
+
+<BaseLayout title={`${product.title} — ${profile.name}`} description={`${product.detail}. ${product.description}`}>
+  <Header />
+  <Cart />
+  <Search />
+  <main id="main" class="mx-auto max-w-5xl px-5 py-8 sm:py-14">
+    <a
+      href={`/shop/#${product.id}`}
+      class="inline-flex min-h-11 items-center gap-1.5 text-sm text-wool-600 hover:text-wool-900 focus-visible:outline-2 focus-visible:outline-bark-600 dark:text-wool-400 dark:hover:text-wool-100"
+    >
+      <svg class="size-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" aria-hidden="true">
+        <path d="M15 5l-7 7 7 7"></path>
+      </svg>
+      Shop
+    </a>
+    <article aria-labelledby="product-title" class="mt-4 grid gap-8 md:grid-cols-[3fr_2fr] md:gap-12">
+      <div class:list={["-mx-5 sm:mx-0", product.sold && "opacity-60"]}>
+        <Carousel
+          slides={slides}
+          label={product.title}
+          width={640}
+          height={800}
+          widths={[400, 640, 1080]}
+          sizes="(min-width: 1064px) 590px, (min-width: 768px) 60vw, 100vw"
+          zoom
+          priority
+        />
+      </div>
+      <div class="md:pt-2">
+        <p class="text-xs font-semibold tracking-wide text-wool-600 uppercase dark:text-wool-400">{kind}</p>
+        <h1 id="product-title" class="mt-1 text-3xl font-bold tracking-wide uppercase">{product.title}</h1>
+        <p class="mt-2 text-sm text-wool-600 dark:text-wool-400">{product.detail}</p>
+        <p class="mt-4 text-lg tabular-nums">
+          {product.sold ? <s class="text-wool-600 dark:text-wool-400">{formatPrice(product.price)}</s> : formatPrice(product.price)}
+        </p>
+        <p class="mt-6 max-w-prose leading-relaxed">{product.description}</p>
+        {product.original && !product.sold && <p class="mt-4 text-sm text-wool-600 dark:text-wool-400">One of a kind. Only this piece exists.</p>}
+        <AddToCart product={product} class="mt-8 w-full sm:w-auto sm:min-w-56" />
+      </div>
+    </article>
+  </main>
+  <Footer />
+</BaseLayout>

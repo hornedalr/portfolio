@@ -1,6 +1,6 @@
 // Everything the site search can find, built at compile time and shipped as a small JSON blob.
 import { profile, projects, slug } from "./site";
-import { formatPrice, lamps, originals } from "./shop";
+import { formatPrice, lamps, originals, productHref } from "./shop";
 import { exhibitionId, exhibitions, formatDates } from "./exhibitions";
 
 export interface SearchEntry {
@@ -27,12 +27,12 @@ export const searchIndex: SearchEntry[] = [
     text: [...p.details.map((d) => d.value), p.summary].join(" · "),
     href: `/#work-${slug(p.title)}`,
   })),
-  ...lamps.map((p) => ({ title: p.title, kind: "Lamp", text: `${p.detail} · ${formatPrice(p.price)}`, href: `/shop/#${p.id}` })),
+  ...lamps.map((p) => ({ title: p.title, kind: "Lamp", text: `${p.detail} · ${formatPrice(p.price)}`, href: productHref(p) })),
   ...originals.map((p) => ({
     title: p.title,
     kind: "Original work",
     text: `${p.detail} · ${p.sold ? "Sold" : formatPrice(p.price)}`,
-    href: `/shop/#${p.id}`,
+    href: productHref(p),
   })),
   ...exhibitions.map((x) => ({ title: x.title, kind: "Exhibition", text: `${x.venue} · ${formatDates(x)}`, href: `/#${exhibitionId(x)}` })),
 ];
