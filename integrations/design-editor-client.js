@@ -11,62 +11,89 @@ host.setAttribute("data-design-editor", "");
 const shadow = host.attachShadow({ mode: "open" });
 shadow.innerHTML = `
 <style>
-  :host { all: initial; }
-  * { box-sizing: border-box; font: 13px/1.35 ui-sans-serif, system-ui, "Segoe UI", sans-serif; color: #1a1a1a; }
-  code, .mono { font-family: ui-monospace, Consolas, monospace; }
-  button { cursor: pointer; background: #fff; border: 1px solid #bbb; padding: 6px 12px; }
-  button:hover { background: #f2f2f2; }
+  :host { all: initial; --ink: #211f1c; --paper: #faf8f4; --sunk: #f3efe7; --line: #e7e1d6; --line-strong: #d6cfc3; --muted: #6e6663;
+          --accent: #75533a; --accent-hover: #5e4330; --accent-soft: #efe3d6; }
+  * { box-sizing: border-box; font: 13px/1.4 ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif; color: var(--ink); }
+  code, .mono { font-family: ui-monospace, "SF Mono", Consolas, monospace; font-size: 12px; }
+  button, .btn { cursor: pointer; background: var(--paper); border: 1px solid var(--line-strong); padding: 6px 12px; text-decoration: none; display: inline-flex; align-items: center; gap: 6px; }
+  button:hover, .btn:hover { background: var(--sunk); }
   button:disabled { opacity: .4; cursor: default; }
-  .toggle { position: fixed; left: 16px; bottom: 16px; z-index: 2147483000; font-weight: 600; box-shadow: 0 4px 16px #0003; }
-  .toggle[aria-pressed="true"] { background: #0a84ff; border-color: #0a84ff; color: #fff; }
-  .box { position: fixed; z-index: 2147482999; pointer-events: none; outline: 2px dashed #0a84ff; outline-offset: 1px; display: none; }
-  .box.selected { outline-style: solid; }
-  .panel { position: fixed; top: 16px; right: 16px; bottom: 16px; width: 330px; z-index: 2147483000; display: none; flex-direction: column;
-           background: #fff; border: 1px solid #bbb; box-shadow: 0 12px 40px #0004; }
+  button:focus-visible, a:focus-visible, textarea:focus-visible, input:focus-visible, select:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
+  .dock { position: fixed; left: 16px; bottom: 16px; z-index: 2147483000; display: flex; box-shadow: 0 6px 24px #211f1c33; }
+  .dock > * { font-weight: 600; letter-spacing: .02em; padding: 9px 14px; border-color: var(--ink); }
+  .dock > * + * { border-left: 0; }
+  .toggle[aria-pressed="true"] { background: var(--ink); color: var(--paper); }
+  .toggle[aria-pressed="true"]:hover { background: #000; }
+  .box { position: fixed; z-index: 2147482999; pointer-events: none; outline: 1.5px dashed var(--accent); outline-offset: 2px; display: none; }
+  .box.selected { outline: 2px solid var(--accent); box-shadow: 0 0 0 4px #fff9; }
+  .box .tag { position: absolute; left: -4px; bottom: calc(100% + 4px); background: var(--accent); color: #fff; font-size: 11px; font-weight: 600;
+              letter-spacing: .04em; text-transform: uppercase; padding: 2px 7px; white-space: nowrap; }
+  .box .tag:empty { display: none; }
+  .panel { position: fixed; top: 16px; right: 16px; bottom: 16px; width: 340px; z-index: 2147483000; display: none; flex-direction: column;
+           background: var(--paper); border: 1px solid var(--ink); box-shadow: 0 16px 48px #211f1c40; }
   .panel.open { display: flex; }
-  .head, .foot { display: flex; align-items: center; gap: 8px; padding: 10px 14px; border-bottom: 1px solid #ddd; }
-  .foot { border-bottom: 0; border-top: 1px solid #ddd; }
-  .head strong { flex: 1; font-weight: 700; }
-  .muted { color: #666; }
-  .body { flex: 1; overflow-y: auto; padding: 10px 14px; }
-  h3 { margin: 14px 0 4px; font-size: 11px; font-weight: 700; letter-spacing: .05em; text-transform: uppercase; color: #666; }
-  summary { cursor: pointer; margin-top: 14px; font-size: 11px; font-weight: 700; letter-spacing: .05em; text-transform: uppercase; color: #666; }
-  .row { display: flex; width: 100%; align-items: center; gap: 8px; padding: 5px 4px; border: 0; text-align: left; background: none; }
-  .row.active { background: #e6f0ff; }
-  .chip { width: 24px; height: 24px; flex: none; border: 1px solid #ccc; }
+  .head, .foot { display: flex; align-items: center; gap: 8px; padding: 12px 16px; }
+  .head { border-bottom: 1px solid var(--line); }
+  .foot { border-top: 1px solid var(--line); }
+  .foot[hidden] { display: none; }
+  .head strong { flex: 1; font-size: 12px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; }
+  .muted { color: var(--muted); }
+  .body { flex: 1; overflow-y: auto; }
+  .intro { padding: 16px; }
+  .picked { padding: 14px 16px 12px; background: var(--sunk); border-bottom: 1px solid var(--line); }
+  .picked .kind { display: block; font-size: 11px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: var(--accent); }
+  .picked .what { display: block; margin-top: 2px; font-size: 15px; font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .picked .twins { display: block; margin-top: 4px; color: var(--muted); font-size: 12px; }
+  .tabs { display: flex; border-bottom: 1px solid var(--line); padding: 0 8px; position: sticky; top: 0; background: var(--paper); z-index: 1; }
+  .tabs button { border: 0; background: none; padding: 10px 8px 9px; margin-bottom: -1px; border-bottom: 2px solid transparent; color: var(--muted); font-weight: 600; }
+  .tabs button:hover { color: var(--ink); background: none; }
+  .tabs button[aria-selected="true"] { color: var(--ink); border-bottom-color: var(--accent); }
+  section { padding: 12px 16px 16px; }
+  h3 { margin: 16px 0 6px; font-size: 11px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); }
+  section > h3:first-child { margin-top: 2px; }
+  summary { cursor: pointer; margin-top: 16px; font-size: 11px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); }
+  .row { display: flex; width: 100%; align-items: center; gap: 10px; padding: 6px; border: 0; text-align: left; background: none; }
+  .row:hover { background: var(--sunk); }
+  .row.active { background: var(--accent-soft); }
+  .chip { width: 26px; height: 26px; flex: none; border: 1px solid #211f1c26; }
   .row .name { display: block; font-weight: 600; }
-  .row .uses { display: block; color: #666; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 180px; }
+  .row .uses { display: block; color: var(--muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 190px; font-size: 12px; }
   .row span.grow { flex: 1; min-width: 0; }
-  .wheel { display: none; border-top: 1px solid #ddd; padding: 10px 14px; }
-  .wheel.open { display: block; }
+  .wheel { display: none; border-top: 1px solid var(--line); padding: 12px 16px; background: var(--sunk); }
+  .panel[data-view="colour"] .wheel.open { display: block; }
   .wheel .top { display: flex; justify-content: space-between; margin-bottom: 8px; }
   .wheel .cols { display: flex; gap: 12px; }
-  canvas { width: 150px; height: 150px; flex: none; cursor: crosshair; touch-action: none; }
+  canvas { width: 140px; height: 140px; flex: none; cursor: crosshair; touch-action: none; }
   .side { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 8px; }
-  .swatch { height: 46px; border: 1px solid #ccc; }
-  label { display: flex; flex-direction: column; gap: 3px; }
-  input[type=text], input[type=range], .side > * { box-sizing: border-box; width: 100%; min-width: 0; }
-  input[type=text] { border: 1px solid #bbb; padding: 4px 6px; text-transform: uppercase; }
-  textarea { display: block; width: 100%; border: 1px solid #bbb; padding: 6px; resize: vertical; }
-  .tweak { display: flex; align-items: center; gap: 6px; margin: 4px 0; }
+  .swatch { height: 42px; border: 1px solid #211f1c26; }
+  label { display: flex; flex-direction: column; gap: 4px; }
+  input[type=text], input[type=range], .side > * { width: 100%; min-width: 0; }
+  input[type=range] { accent-color: var(--accent); margin: 2px 0; }
+  input[type=text], textarea, select { border: 1px solid var(--line-strong); background: #fff; padding: 6px 8px; }
+  input[type=text] { text-transform: uppercase; }
+  textarea { display: block; width: 100%; resize: vertical; font-size: 14px; line-height: 1.45; }
+  .tweak { display: flex; align-items: center; gap: 6px; padding: 5px 0; border-bottom: 1px solid var(--line); }
   .tweak .grow { flex: 1; }
-  .tweak button { width: 30px; padding: 4px 0; }
-  .tweak code { min-width: 40px; text-align: center; }
-  select { border: 1px solid #bbb; padding: 4px; background: #fff; }
-  .link { border: 0; padding: 0; color: #0a84ff; background: none; }
+  .tweak button { width: 30px; height: 28px; padding: 0; justify-content: center; }
+  .tweak code { min-width: 44px; text-align: center; }
+  .actions { display: flex; gap: 8px; margin-top: 12px; }
+  .link { border: 0; padding: 0; color: var(--accent); background: none; font-weight: 600; }
   .link:hover { text-decoration: underline; background: none; }
-  .primary { background: #0a84ff; border-color: #0a84ff; color: #fff; font-weight: 600; }
-  .primary:hover { background: #0670d9; }
-  .thumb { display: block; width: 100%; max-height: 130px; object-fit: contain; border: 1px solid #ddd; margin-bottom: 6px; }
+  .primary { background: var(--accent); border-color: var(--accent); color: #fff; font-weight: 600; }
+  .primary:hover { background: var(--accent-hover); }
+  .thumb { display: block; width: 100%; max-height: 150px; object-fit: contain; background: var(--sunk); border: 1px solid var(--line); margin-bottom: 6px; }
   .break { word-break: break-all; }
   p { margin: 0 0 6px; }
 </style>
-<button class="toggle" aria-pressed="false">✎ Edit design</button>
+<div class="dock">
+  <button class="toggle" aria-pressed="false">✎ Edit design</button>
+  ${location.pathname.startsWith("/playground") ? `<a class="btn" href="/">← Back to site</a>` : `<a class="btn" href="/playground">Cord playground</a>`}
+</div>
 <div class="box hover"></div>
-<div class="box selected"></div>
+<div class="box selected"><span class="tag"></span></div>
 <aside class="panel" aria-label="Design editor">
   <div class="head"><strong>Design editor</strong><span class="status muted"></span></div>
-  <div class="body"><p class="muted">Click anything on the page to edit its text, colours or picture. Press Esc to stop editing.</p></div>
+  <div class="body"><p class="intro muted">Click anything on the page to change its text, size, colours or picture. Press Esc to stop editing.</p></div>
   <div class="wheel">
     <div class="top"><code class="token" style="font-weight:700"></code><button class="link revert">Revert</button></div>
     <div class="cols">
@@ -79,9 +106,9 @@ shadow.innerHTML = `
     </div>
   </div>
   <div class="foot">
-    <span class="dirty muted" style="flex:1">No changes</span>
+    <span class="dirty muted" style="flex:1">No colour changes</span>
     <button class="discard" disabled>Discard</button>
-    <button class="primary save" disabled>Save</button>
+    <button class="primary save" disabled>Save colours</button>
   </div>
 </aside>
 <input type="file" accept="image/png,image/jpeg,image/webp" hidden />
@@ -172,9 +199,12 @@ const setColor = (token, hex) => {
 };
 const refreshDirty = () => {
   const n = changes.size;
-  dirtyLabel.textContent = n ? `${n} unsaved colour${n > 1 ? "s" : ""}` : "No changes";
+  dirtyLabel.textContent = n ? `${n} unsaved colour${n > 1 ? "s" : ""}` : "No colour changes";
   saveBtn.disabled = discardBtn.disabled = !n;
+  updateFoot();
 };
+// The colour Save bar only matters on the Colour tab, or while colours are unsaved.
+const updateFoot = () => ($(".foot").hidden = !changes.size && Boolean(panel.dataset.view) && panel.dataset.view !== "colour");
 let editing = false;
 // Remembers the selected element by its source position, so it stays selected after a save reloads the page.
 const locate = (el) => {
@@ -292,8 +322,15 @@ const esc = (s) => s.replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">"
 const describe = (el) => {
   const text = (el.textContent ?? "").trim().replace(/\s+/g, " ");
   const label = el.getAttribute("aria-label") || el.getAttribute("alt") || text;
-  return `${el.tagName.toLowerCase()}${label ? ` — “${label.slice(0, 40)}${label.length > 40 ? "…" : ""}”` : ""}`;
+  return label ? `${label.slice(0, 60)}${label.length > 60 ? "…" : ""}` : "";
 };
+const KINDS = {
+  h1: "Heading", h2: "Heading", h3: "Heading", h4: "Heading", h5: "Heading", h6: "Heading", p: "Paragraph", img: "Picture",
+  picture: "Picture", a: "Link", button: "Button", li: "List item", ul: "List", ol: "List", dd: "Detail", dt: "Detail label",
+  dl: "Details", section: "Section", header: "Header", footer: "Footer", nav: "Menu", article: "Card", form: "Form", input: "Field",
+  textarea: "Field", label: "Label", span: "Text", s: "Text", strong: "Text", em: "Text", svg: "Icon", path: "Icon", main: "Page", body: "Page",
+};
+const kindOf = (el) => (el.closest("[data-pull-cord]") ? "Pull cord" : KINDS[el.tagName.toLowerCase()] ?? "Box");
 const row = (token, uses) => `
   <button class="row" data-token="${token}">
     <span class="chip" data-chip="${token}" style="background:${current(token)}"></span>
@@ -312,6 +349,11 @@ const WEIGHT_CLASS = new RegExp(`^((?:[\\w-]+:)*)font-(${Object.keys(WEIGHTS).jo
 const WIDTH_CLASS = /^w-(full|\[\d+%\])$/;
 const remPx = () => parseFloat(getComputedStyle(root).fontSize) || 16;
 const nearest = (values, v) => values.reduce((best, x, i) => (Math.abs(x - v) < Math.abs(values[best] - v) ? i : best), 0);
+const contentWidth = (el) => {
+  if (!el) return 1;
+  const s = getComputedStyle(el);
+  return el.clientWidth - parseFloat(s.paddingLeft) - parseFloat(s.paddingRight) || 1;
+};
 const clampIndex = (i, list) => Math.max(0, Math.min(list.length - 1, i));
 
 let layout = null;
@@ -336,12 +378,12 @@ const layoutSection = (el) => {
     above: nearest(SPACES.map(Number), parseFloat(style.marginTop) / remPx() / 0.25), aboveSteps: 0,
     below: nearest(SPACES.map(Number), parseFloat(style.marginBottom) / remPx() / 0.25), belowSteps: 0,
     weight: null, width: null,
-    startWidth: Math.round((el.getBoundingClientRect().width / (el.parentElement?.getBoundingClientRect().width || 1)) * 100),
+    startWidth: Math.round((el.getBoundingClientRect().width / contentWidth(el.parentElement)) * 100),
   };
   const stepper = (key, label) => `
     <div class="tweak"><span class="grow">${label}</span><button data-step="${key}" data-by="-1" aria-label="Less">−</button>
     <code class="muted" data-show="${key}"></code><button data-step="${key}" data-by="1" aria-label="More">+</button></div>`;
-  let html = `<h3>Size &amp; spacing</h3>`;
+  let html = "";
   if (image) {
     html += `<label>Picture size <span class="muted" data-show="width"></span>
       <input type="range" class="width" min="20" max="100" step="5" value="${Math.min(100, layout.startWidth)}" /></label>`;
@@ -354,9 +396,9 @@ const layoutSection = (el) => {
       .join("")}</select></div>`;
   }
   html += stepper("above", "Space above") + stepper("below", "Space below");
-  html += `<div style="display:flex;gap:8px;margin-top:6px">
+  html += `<div class="actions">
       <button class="primary" data-layout-save disabled>Save size &amp; spacing</button><button data-layout-undo disabled>Undo</button></div>
-    <p class="muted layout-msg" style="margin-top:4px">${layout.twins.length > 1 ? `Changes all ${layout.twins.length} like this on the page.` : ""}</p>`;
+    <p class="muted layout-msg" style="margin-top:6px"></p>`;
   return html;
 };
 const layoutChanged = () =>
@@ -459,51 +501,74 @@ const select = (el) => {
   if (el.closest("[data-pull-cord]")) document.querySelectorAll("[data-sheep], [data-sheep] *").forEach((s) => tokensOf(s, false, found));
   for (let p = el.parentElement; p; p = p.parentElement) tokensOf(p, true, found);
 
-  let html = `<p style="font-weight:600" class="break">${esc(describe(el))}</p>`;
+  const sections = {};
   const nodes = textNodesOf(el);
   if (nodes.length && nodes.every((n) => n.parentElement === el)) {
     const text = el.textContent.trim().replace(/\s+/g, " ");
     textEdit = { el, nodes, before: nodes.map((n) => n.nodeValue), text };
-    html += `<h3>Text</h3>
-      <textarea class="text-edit" rows="${Math.min(8, Math.ceil(text.length / 38) + 1)}" spellcheck="true">${esc(text)}</textarea>
-      <div style="display:flex;gap:8px;margin-top:6px">
-        <button class="primary" data-text-save disabled>Save text</button><button data-text-undo disabled>Undo</button>
-      </div>
-      <p class="muted text-msg" style="margin-top:4px"></p>`;
+    sections.text = `
+      <textarea class="text-edit" rows="${Math.min(8, Math.ceil(text.length / 36) + 1)}" spellcheck="true" aria-label="Text">${esc(text)}</textarea>
+      <div class="actions"><button class="primary" data-text-save disabled>Save text</button><button data-text-undo disabled>Undo</button></div>
+      <p class="muted text-msg" style="margin-top:6px"></p>`;
   } else if (nodes.length) {
-    html += `<h3>Text</h3><p class="muted">Click directly on a heading or paragraph to edit its words.</p>`;
+    sections.text = `<p class="muted">This holds several pieces of text. Click directly on a heading or paragraph to change its words.</p>`;
   }
   const img = el instanceof HTMLImageElement ? el : (el.closest("picture")?.querySelector("img") ?? el.querySelector("img"));
   const file = img && imageFileOf(img);
   if (img && file) {
-    html += `<h3>Picture</h3>
+    sections.picture = `
       <img class="thumb" src="${esc(img.currentSrc || img.src)}" alt="" />
       <p class="muted break">${esc(file.replace(/^.*\/src\//, "src/"))}</p>
       <button data-replace="${encodeURIComponent(file)}">Replace picture…</button>
-      <p class="muted" style="margin-top:4px">Cropped to the current proportions.</p>`;
+      <p class="muted" style="margin-top:6px">Cropped to the current proportions.</p>`;
   } else if (img) {
-    html += `<h3>Picture</h3><p class="muted">This picture isn't from src/assets, so it can't be replaced here.</p>`;
+    sections.picture = `<p class="muted">This picture isn't from src/assets, so it can't be replaced here.</p>`;
   }
-  html += layoutSection(el);
   if (el.closest("[data-pull-cord]")) {
-    html += `<h3>Pull ball picture</h3>
+    sections.picture = `
+      <h3>Pull ball picture</h3>
       <p class="muted">Replace the sheep with your own PNG. The cord attaches at the top centre.</p>
-      <div style="display:flex;gap:8px"><button data-ball="light">Light mode…</button><button data-ball="dark">Dark mode…</button></div>
-      <button data-ball-reset style="margin-top:6px">Back to the sheep</button>`;
+      <div class="actions"><button data-ball="light">Light mode…</button><button data-ball="dark">Dark mode…</button></div>
+      <button data-ball-reset style="margin-top:8px">Back to the sheep</button>
+      <h3>Cord physics</h3>
+      <p class="muted">Length, stretch and bounce are tuned in the playground.</p>
+      <a class="btn" href="/playground">Open cord playground</a>`;
   }
+  const layoutHtml = el.closest("[data-pull-cord]") ? "" : layoutSection(el);
+  if (layoutHtml) sections.layout = layoutHtml;
   const uses = [...found.values()];
   const own = uses.filter((u) => u.own);
   const around = uses.filter((u) => !u.own);
-  if (own.length) html += `<h3>Colours used here</h3>${own.map((u) => row(u.token, [...u.uses].join(", "))).join("")}`;
-  if (around.length) html += `<h3>Colours from around it</h3>${around.map((u) => row(u.token, [...u.uses].join(", "))).join("")}`;
+  let colours = "";
+  if (own.length) colours += `<h3>Used here</h3>${own.map((u) => row(u.token, [...u.uses].join(", "))).join("")}`;
+  if (around.length) colours += `<h3>From around it</h3>${around.map((u) => row(u.token, [...u.uses].join(", "))).join("")}`;
   const rest = palette().filter((t) => !found.has(t));
-  html += `<details><summary>All palette colours</summary>${rest.map((t) => row(t, "")).join("")}</details>`;
+  colours += `<details><summary>All palette colours</summary>${rest.map((t) => row(t, "")).join("")}</details>`;
+  sections.colour = colours;
 
-  body.innerHTML = html;
+  const names = { text: "Text", layout: "Size & spacing", colour: "Colour", picture: "Picture" };
+  const order = ["text", "picture", "layout", "colour"].filter((k) => sections[k]);
+  const tab = order.includes(lastTab) ? lastTab : order[0];
+  const twins = layout?.twins.length > 1 ? `<span class="twins">Changes all ${layout.twins.length} like this on the page</span>` : "";
+  body.innerHTML = `
+    <div class="picked"><span class="kind">${kindOf(el)}</span><span class="what">${el.closest("[data-pull-cord]") ? "The sheep · light/dark switch" : esc(describe(el)) || "&nbsp;"}</span>${twins}</div>
+    <div class="tabs" role="tablist">${order
+      .map((k) => `<button role="tab" data-tab="${k}" aria-selected="${k === tab}">${names[k].replace("&", "&amp;")}</button>`)
+      .join("")}</div>
+    ${order.map((k) => `<section data-panel="${k}"${k === tab ? "" : " hidden"}>${sections[k]}</section>`).join("")}`;
+  selectedBox.querySelector(".tag").textContent = kindOf(el);
+  showTab(tab);
   refreshLayout();
   wheel.classList.remove("open");
   const first = own[0] ?? around[0];
   if (first) openWheel(first.token);
+};
+let lastTab = "";
+const showTab = (tab) => {
+  panel.dataset.view = tab;
+  updateFoot();
+  for (const b of body.querySelectorAll("[data-tab]")) b.setAttribute("aria-selected", String(b.dataset.tab === tab));
+  for (const s of body.querySelectorAll("[data-panel]")) s.hidden = s.dataset.panel !== tab;
 };
 
 let uploadQuery = "";
@@ -513,6 +578,11 @@ const chooseFile = (query) => {
   fileInput.click();
 };
 body.addEventListener("click", (e) => {
+  const tabBtn = e.target.closest(".tabs [data-tab]");
+  if (tabBtn) {
+    lastTab = tabBtn.dataset.tab;
+    return showTab(lastTab);
+  }
   const r = e.target.closest(".row");
   if (r) return openWheel(r.dataset.token);
   if (e.target.closest("[data-text-save]")) return saveText();
