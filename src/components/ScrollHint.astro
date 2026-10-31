@@ -1,63 +1,48 @@
 ---
-// Once per visit, gently scrolls the page a little towards the works and back (see the script for when).
+// Once per visit, after a few pulls of the cord, gently scrolls the page a little towards the works and back.
 ---
 
 <script>
-  // Nudges the page towards the works below: scrolls down a little and back. Runs once per visit to the page,
-  // after the lights have been switched HINT_AFTER_TOGGLES times, or after IDLE_MS without a pull.
+  // Nudges the page towards the works below: one soft swell down and back up. Plays once per page load, only
+  // after the lights have been switched HINT_AFTER_TOGGLES times.
   const HINT_AFTER_TOGGLES = 3;
-  const IDLE_MS = 5000;
+  const DURATION_MS = 2600;
   const html = document.documentElement;
   const reduceMotion = matchMedia("(prefers-reduced-motion: reduce)");
 
   let done = false;
   let toggles = 0;
-  let idle = 0;
+  let wait = 0;
   let wasDark = html.classList.contains("dark");
 
   const finish = () => {
     done = true;
-    clearTimeout(idle);
+    clearTimeout(wait);
     observer.disconnect();
   };
-  const ease = (t: number) => (t < 0.5 ? 4 * t * t * t : 1 - (-2 * t + 2) ** 3 / 2);
+  // 0 → 1 → 0 with no jolt at either end or at the turn: a raised cosine.
+  const swell = (t: number) => (1 - Math.cos(2 * Math.PI * t)) / 2;
   const scrollTo = (top: number) => window.scrollTo({ top, behavior: "instant" });
 
   const hint = () => {
     if (done) return;
     finish();
     if (reduceMotion.matches || window.scrollY > 40) return;
-    const depth = Math.min(180, innerHeight * 0.22);
-    const legs = [
-      { from: 0, to: depth, ms: 700 },
-      { from: depth, to: depth, ms: 220 },
-      { from: depth, to: 0, ms: 750 },
-    ];
+    const depth = Math.min(110, innerHeight * 0.13);
     // Any touch, wheel or key hands control back to the visitor straight away.
     let stopped = false;
     const stop = () => (stopped = true);
     const events = ["wheel", "touchstart", "pointerdown", "keydown"] as const;
     events.forEach((e) => addEventListener(e, stop, { once: true, passive: true }));
-    let leg = 0;
-    let start = performance.now();
+    const start = performance.now();
     const step = (now: number) => {
       if (stopped) return;
-      const { from, to, ms } = legs[leg];
-      const t = Math.min(1, (now - start) / ms);
-      scrollTo(from + (to - from) * ease(t));
-      if (t === 1) {
-        leg += 1;
-        start = now;
-        if (leg === legs.length) return events.forEach((e) => removeEventListener(e, stop));
-      }
-      requestAnimationFrame(step);
+      const t = Math.min(1, (now - start) / DURATION_MS);
+      scrollTo(depth * swell(t));
+      if (t < 1) requestAnimationFrame(step);
+      else events.forEach((e) => removeEventListener(e, stop));
     };
     requestAnimationFrame(step);
-  };
-
-  const waitIdle = () => {
-    clearTimeout(idle);
-    idle = window.setTimeout(hint, IDLE_MS);
   };
 
   // The pull cord switches the theme by toggling the "dark" class, so watch for that.
@@ -66,15 +51,13 @@
     if (dark === wasDark) return;
     wasDark = dark;
     toggles += 1;
-    if (toggles >= HINT_AFTER_TOGGLES) {
-      clearTimeout(idle);
-      // Let the lamps finish switching first.
-      idle = window.setTimeout(hint, 1200);
-    } else waitIdle();
+    if (toggles < HINT_AFTER_TOGGLES) return;
+    clearTimeout(wait);
+    // Let the lamps finish switching first.
+    wait = window.setTimeout(hint, 1200);
   });
   observer.observe(html, { attributes: true, attributeFilter: ["class"] });
 
   // Someone who already scrolls on their own doesn't need the hint.
   addEventListener("scroll", () => window.scrollY > 40 && finish(), { passive: true });
-  waitIdle();
 </script>

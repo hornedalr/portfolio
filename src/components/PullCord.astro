@@ -302,7 +302,8 @@ const ballScale = s.ballRadius / 13;
       }, 2000);
     };
     // First baa 4.4s after the intro swing begins (the intro starts as soon as this script runs, on every load).
-    window.setTimeout(baa, 4_400);
+    const FIRST_BAA_MS = 4_400;
+    window.setTimeout(baa, FIRST_BAA_MS);
 
     // Every 5th pull in a row the sheep baas, 2s after that pull. A pause longer than STREAK_GAP_MS starts a new row.
     const PULLS_PER_BAA = 5;
@@ -445,7 +446,9 @@ const ballScale = s.ballRadius / 13;
     };
 
     handle.addEventListener("pointerdown", (e) => {
-      if (e.button !== 0 || pointerId !== null || autoPull) return;
+      if (e.button !== 0 || pointerId !== null) return;
+      cancelPullHint();
+      if (autoPull) return;
       clearTimeout(introHold);
       introHold = 0;
       pointerId = e.pointerId;
@@ -487,6 +490,7 @@ const ballScale = s.ballRadius / 13;
         suppressClick = false;
         return;
       }
+      cancelPullHint();
       if (!reduceMotion.matches) {
         rope.tug(s.tapTug);
         wake();
@@ -572,6 +576,41 @@ const ballScale = s.ballRadius / 13;
         wake();
       });
     }
+
+    // If the cord hasn't been touched 3s after the first baa, it gives itself one short tug (not far enough to
+    // switch the lights) to show that it can be pulled.
+    const PULL_HINT_MS = FIRST_BAA_MS + 3000;
+    let pullHint: ((now: number) => void) | null = null;
+    let touched = false;
+    const cancelPullHint = () => {
+      touched = true;
+      if (!pullHint || autoPull !== pullHint) return;
+      autoPull = pullHint = null;
+      rope.endDrag();
+    };
+    window.setTimeout(() => {
+      if (touched || reduceMotion.matches || pointerId !== null || autoPull || rope.isDragging) return;
+      if (document.hidden || window.scrollY > innerHeight / 2) return;
+      const fromX = rope.handleX;
+      const fromY = rope.handleY;
+      const depth = s.trigger * 0.45;
+      const downMs = 420;
+      let t0 = -1;
+      pullHint = autoPull = (now) => {
+        if (t0 < 0) {
+          t0 = now;
+          rope.startDrag(fromX, fromY);
+        }
+        const k = Math.min((now - t0) / downMs, 1);
+        const ease = k < 0.5 ? 2 * k * k : 1 - (-2 * k + 2) ** 2 / 2;
+        rope.setDragTarget(fromX, fromY + depth * ease);
+        if (k === 1) {
+          autoPull = pullHint = null;
+          finishPull(false);
+        }
+      };
+      wake();
+    }, PULL_HINT_MS);
 
     syncLabel();
     playIntro();
