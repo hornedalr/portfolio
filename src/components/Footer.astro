@@ -1,0 +1,9 @@
+---
+import { profile } from "../data/site";
+
+const year = new Date().getFullYear();
+---
+
+<footer class="py-8 text-center text-sm text-wool-600 dark:text-wool-400">
+  <p>&copy; {year} {profile.name}. Built with Astro &amp; Tailwind CSS.</p>
+</footer>

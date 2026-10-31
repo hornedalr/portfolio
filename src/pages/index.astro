@@ -3,15 +3,13 @@ import BaseLayout from "../layouts/BaseLayout.astro";
 import Header from "../components/Header.astro";
 import Hero from "../components/Hero.astro";
 import ProjectCard from "../components/ProjectCard.astro";
-import Shop from "../components/Shop.astro";
 import Cart from "../components/Cart.astro";
 import Search from "../components/Search.astro";
 import Exhibitions from "../components/Exhibitions.astro";
 import ContactForm from "../components/ContactForm.astro";
+import Footer from "../components/Footer.astro";
 import { Image } from "astro:assets";
 import { profile, projects } from "../data/site";
-
-const year = new Date().getFullYear();
 ---
 
 <BaseLayout title={`${profile.name} — ${profile.role}`} description={profile.tagline}>
@@ -32,8 +30,6 @@ const year = new Date().getFullYear();
     </section>
 
     <Exhibitions />
-
-    <Shop />
 
     <section id="about" aria-labelledby="about-heading" class="scroll-mt-16 py-16 sm:py-24">
       <div class="mx-auto max-w-xl px-5">
@@ -87,7 +83,5 @@ const year = new Date().getFullYear();
     <ContactForm />
   </main>
 
-  <footer class="py-8 text-center text-sm text-wool-600 dark:text-wool-400">
-    <p>&copy; {year} {profile.name}. Built with Astro &amp; Tailwind CSS.</p>
-  </footer>
+  <Footer />
 </BaseLayout>

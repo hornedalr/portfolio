@@ -1,0 +1,19 @@
+---
+import BaseLayout from "../layouts/BaseLayout.astro";
+import Header from "../components/Header.astro";
+import Shop from "../components/Shop.astro";
+import Cart from "../components/Cart.astro";
+import Search from "../components/Search.astro";
+import Footer from "../components/Footer.astro";
+import { profile } from "../data/site";
+---
+
+<BaseLayout title={`Shop — ${profile.name}`} description={`Wool lamps and original works by ${profile.name}.`}>
+  <Header />
+  <Cart />
+  <Search />
+  <main id="main">
+    <Shop />
+  </main>
+  <Footer />
+</BaseLayout>
