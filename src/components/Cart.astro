@@ -1,5 +1,13 @@
 ---
 import { formatPrice, products } from "../data/shop";
+import { url } from "../data/site";
+
+interface Props {
+  /** Off the shop's own pages, offer a way to it from the cart. */
+  shopLink?: boolean;
+}
+
+const { shopLink = false } = Astro.props;
 
 const catalogue = Object.fromEntries(products.map((p) => [p.id, { title: p.title, price: p.price, original: !!p.original }]));
 const iconButton =
@@ -19,14 +27,41 @@ const iconButton =
   class="fixed inset-y-0 right-0 z-50 flex w-full translate-x-full flex-col bg-wool-50 shadow-xl transition-transform duration-300 data-[open]:translate-x-0 sm:max-w-sm dark:bg-wool-950"
 >
   <div class="flex items-center justify-between border-b border-wool-200 py-2 pr-3 pl-5 dark:border-wool-800">
-    <h2 id="cart-heading" class="text-sm font-semibold tracking-wide uppercase">Cart</h2>
+    <div class="flex items-center gap-4">
+      <h2 id="cart-heading" class="text-sm font-semibold tracking-wide uppercase">Cart</h2>
+      {
+        shopLink && (
+          <a
+            href={url("/shop/")}
+            class="inline-flex min-h-9 items-center border border-wool-800 px-3 text-xs font-medium tracking-wide uppercase hover:bg-wool-900 hover:text-wool-50 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-bark-600 dark:border-wool-300 dark:hover:bg-wool-100 dark:hover:text-wool-950"
+          >
+            Go to shop
+          </a>
+        )
+      }
+    </div>
     <button type="button" data-cart-close aria-label="Close cart" class={iconButton}>
       <svg class="size-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" aria-hidden="true">
         <path d="m6 6 12 12M18 6 6 18"></path>
       </svg>
     </button>
   </div>
-  <p data-cart-empty class="px-5 py-8 text-wool-600 dark:text-wool-400">Your cart is empty.</p>
+  {
+    shopLink ? (
+      <div data-cart-empty class="px-5 py-8">
+        <p class="text-wool-600 dark:text-wool-400">Your cart is empty.</p>
+        <p class="mt-1">Would you like to go to the shop?</p>
+        <a
+          href={url("/shop/")}
+          class="mt-5 inline-flex min-h-11 w-full items-center justify-center bg-bark-700 px-4 text-sm font-semibold tracking-wide text-white uppercase hover:bg-bark-800 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-bark-600"
+        >
+          Go to shop
+        </a>
+      </div>
+    ) : (
+      <p data-cart-empty class="px-5 py-8 text-wool-600 dark:text-wool-400">Your cart is empty.</p>
+    )
+  }
   <ul data-cart-items class="flex-1 divide-y divide-wool-200 overflow-y-auto px-5 dark:divide-wool-800"></ul>
   <div class="border-t border-wool-200 px-5 py-5 dark:border-wool-800">
     <div class="flex justify-between text-sm">
