@@ -16,9 +16,9 @@ import portrait from "../assets/portrait.png";
 
 export const profile = {
   name: "Lara Braun",
-  role: "Frontend & Creative Developer",
+  role: "Wool Artist & Designer",
   location: "Stockholm, Sweden",
-  tagline: "I build fast, accessible interfaces that feel effortless to use.",
+  tagline: "Handmade wool lamps and original works, felted and woven in Sweden.",
   bio: [
     "text here",
     "more text",
