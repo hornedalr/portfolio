@@ -33,6 +33,8 @@ const iconButton =
         shopLink && (
           <a
             href={url("/shop/")}
+            data-cart-shop-link
+            hidden
             class="inline-flex min-h-9 items-center border border-wool-800 px-3 text-xs font-medium tracking-wide uppercase hover:bg-wool-900 hover:text-wool-50 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-bark-600 dark:border-wool-300 dark:hover:bg-wool-100 dark:hover:text-wool-950"
           >
             Go to shop
@@ -98,6 +100,7 @@ const iconButton =
   const closeButton = drawer.querySelector<HTMLButtonElement>("[data-cart-close]")!;
   const toggle = document.querySelector<HTMLButtonElement>("[data-cart-button]")!;
   const count = toggle.querySelector<HTMLElement>("[data-cart-count]")!;
+  const shopLink = drawer.querySelector<HTMLElement>("[data-cart-shop-link]");
 
   const KEY = "cart";
   let cart: Record<string, number> = {};
@@ -126,6 +129,8 @@ const iconButton =
     count.hidden = items === 0;
     toggle.setAttribute("aria-label", items ? `Cart, ${items} item${items > 1 ? "s" : ""}` : "Cart");
     empty.hidden = items > 0;
+    // Next to the heading only when there are items; an empty cart already offers the shop in its message.
+    if (shopLink) shopLink.hidden = items === 0;
     total.textContent = format(ids.reduce((sum, id) => sum + cart[id] * catalogue[id].price, 0));
     list.replaceChildren(
       ...ids.map((id) => {
